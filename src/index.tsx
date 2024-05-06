@@ -2,12 +2,10 @@ import { Reflect } from "@rocicorp/reflect/client";
 import { nanoid } from "nanoid";
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import CursorField from "./cursor-field.js";
-import RatingField from "./rating-field.js";
-import styles from "./index.module.css";
+import c from "./index.module.css";
 import { randUserInfo } from "./client-state.js";
 import { mutators } from "./mutators.js";
-import { useCount, useRating } from "./subscriptions.js";
+import RatingCard from "./rating-card";
 
 const userID = nanoid();
 const roomID = "my-room";
@@ -33,24 +31,9 @@ function App() {
     })();
   }, []);
 
-  const handleButtonClick = () => {
-    void r.mutate.increment({ key: "count", delta: 1 });
-  };
-
-  const count = useCount(r);
-  const rating = useRating(r, "rating");
-
   return (
-    <div className={styles.container}>
-      <div className={styles.content}>
-        <div className={styles.count}>{count}</div>
-
-        <button onClick={handleButtonClick}>Bonk</button>
-        <CursorField r={r} />
-
-        <div className={styles.count}>rating: {rating}</div>
-        <RatingField r={r} userID={userID} />
-      </div>
+    <div className={c.outer}>
+      <RatingCard r={r} />
     </div>
   );
 }

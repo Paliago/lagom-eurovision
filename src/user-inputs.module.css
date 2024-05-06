@@ -1,0 +1,27 @@
+.inputRow {
+  display: flex;
+  justify-content: space-evenly;
+  /* width: 100%; */
+}
+
+.inputField {
+  border-radius: 15%;
+  height: 3em;
+  width: 2em;
+  font-weight: 700;
+  font-size: 1.25rem;
+  padding-left: 1.5em;
+  border: 1px solid #010101;
+}
+
+.totalDisplay {
+  border-radius: 15%;
+  height: 3em;
+  width: 2em;
+  font-weight: 700;
+  font-size: 1.25rem;
+  padding-left: 1.5em;
+  border: 1px solid #010101;
+  color: #000;
+  background: #fff;
+}
