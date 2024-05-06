@@ -1,7 +1,7 @@
 import { Reflect } from "@rocicorp/reflect/client";
 import { useEffect } from "react";
-import { M } from "./mutators.js";
-import { useClientState, useRating } from "./subscriptions.js";
+import { M } from "./state/mutators.js";
+import { useClientState, useRating } from "./state/subscriptions.js";
 
 export default function RatingField({
   r,

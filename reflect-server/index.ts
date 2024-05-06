@@ -2,7 +2,7 @@ import type {
   AuthHandler,
   ReflectServerOptions,
 } from "@rocicorp/reflect/server";
-import { M, mutators } from "../src/mutators.js";
+import { M, mutators } from "../src/state/mutators";
 
 const authHandler: AuthHandler = (auth: string, _roomID: string) => {
   if (auth) {

@@ -1,5 +1,5 @@
 import { Reflect } from "@rocicorp/reflect/client";
-import { M } from "./mutators.js";
+import { M } from "./state/mutators.js";
 import styles from "./user-inputs.module.css";
 
 export default function UserInputs({ r }: { r: Reflect<M> }) {

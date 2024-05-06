@@ -1,54 +1,69 @@
 import { Reflect } from "@rocicorp/reflect/client";
-import { nanoid } from "nanoid";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { ChangeEvent, useState } from "react";
 import ReactDOM from "react-dom/client";
 import c from "./index.module.css";
-import { randUserInfo } from "./client-state.js";
-import { mutators } from "./mutators.js";
+import { M, mutators } from "./state/mutators";
+import { randUserInfo } from "./state/client-state";
 import RatingCard from "./rating-card";
-
-const userID = nanoid();
-const roomID = "my-room";
 
 const server: string | undefined = import.meta.env.VITE_REFLECT_URL;
 if (!server) {
   throw new Error("VITE_REFLECT_URL required");
 }
 
-const r = new Reflect({
-  server,
-  userID,
-  roomID,
-  auth: userID,
-  mutators,
-});
+export default function App() {
+  const [r, setR] = useState<Reflect<M> | null>(null);
+  const [userID, setUserID] = useState("");
+  const [roomID, setRoomID] = useState("");
 
-function App() {
-  const [inRoom, setInRoom] = useState(false);
+  const handleJoining = async () => {
+    if (userID && roomID) {
+      const reflect = new Reflect({
+        server,
+        userID,
+        roomID,
+        auth: userID,
+        mutators,
+      });
+
+      const userInfo = randUserInfo(userID);
+      await reflect.mutate.initClientState(userInfo);
+
+      setR(reflect);
+    } else {
+      alert("Please enter both user name and room id");
+    }
+  };
+
+  const handleUserName = (evt: ChangeEvent<HTMLInputElement>) => {
+    setUserID(evt.target.value);
+  };
+
+  const handleRoomID = (evt: ChangeEvent<HTMLInputElement>) => {
+    setRoomID(evt.target.value);
+  };
 
   useEffect(() => {
-    void (async () => {
-      const userInfo = randUserInfo();
-      await r.mutate.initClientState(userInfo);
-    })();
-  }, []);
+    return () => {
+      if (r) {
+        r.close();
+      }
+    };
+  });
 
   return (
     <div className={c.outer}>
-      {!inRoom && (
+      {!r && (
         <div className={c.outer}>
           <h4>Join a Room</h4>
 
-          <input type="text" placeholder="UserName" />
-          <input type="text" placeholder="RoomID" />
-          <button>Join</button>
+          <input type="text" placeholder="UserName" onChange={handleUserName} />
+          <input type="text" placeholder="RoomID" onChange={handleRoomID} />
+          <button onClick={handleJoining}>Join</button>
         </div>
       )}
-      {inRoom && (
-        <div>
-          <RatingCard r={r} />
-        </div>
-      )}
+      {r && <RatingCard r={r} />}
     </div>
   );
 }
@@ -58,16 +73,9 @@ if (rootElement === null) {
   throw new Error("root element is null");
 }
 const root = ReactDOM.createRoot(rootElement);
+
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 );
-
-if (import.meta.hot) {
-  import.meta.hot.dispose(async () => {
-    // this makes sure that there is only one instance of the reflect client during hmr reloads
-    await r.close();
-    root.unmount();
-  });
-}

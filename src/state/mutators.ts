@@ -17,10 +17,14 @@
 // precedence over the client-side optimistic result.
 
 import type { MutatorDefs, WriteTransaction } from "@rocicorp/reflect";
-import { initClientState, updateClientState } from "./client-state.js";
+import {
+  getClientState,
+  initClientState,
+  Rating,
+  updateClientState,
+} from "./client-state.js";
 
 export const mutators = {
-  setCursor,
   initClientState,
   increment,
   setRating,
@@ -32,26 +36,24 @@ async function increment(
   tx: WriteTransaction,
   { key, delta }: { key: string; delta: number },
 ) {
-  console.log(`incrementing ${key} by ${delta}`);
-
   const prev = await tx.get<number>(key);
   const next = (prev ?? 0) + delta;
   await tx.set(key, next);
 }
 
-async function setCursor(
-  tx: WriteTransaction,
-  { x, y }: { x: number; y: number },
-): Promise<void> {
-  await updateClientState(tx, { id: tx.clientID, cursor: { x, y } });
-}
+async function setRating(tx: WriteTransaction, rating: Rating): Promise<void> {
+  const prev = await getClientState(tx, tx.clientID);
+  let ratings = prev?.ratings || [];
 
-async function setRating(
-  tx: WriteTransaction,
-  { rating }: { rating: number },
-): Promise<void> {
-  console.log(`setting rating to ${rating}`);
+  const existingIndex = ratings.findIndex(
+    (r) => r.songIndex === rating.songIndex,
+  );
 
-  await tx.set("rating", rating);
-  // await updateClientState(tx, { id: tx.clientID, rating: { score: rating } });
+  if (existingIndex > -1) {
+    ratings[existingIndex] = rating;
+  } else {
+    ratings.push(rating);
+  }
+
+  await updateClientState(tx, { id: tx.clientID, ratings });
 }

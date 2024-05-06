@@ -1,10 +1,14 @@
 import { Reflect } from "@rocicorp/reflect/client";
-import { M } from "./mutators.js";
+import { M } from "./state/mutators.js";
 import c from "./rating-card.module.css";
 import UserInputs from "./user-inputs.js";
 import MemberRatings from "./member-ratings.js";
 import { Contribution, getContributionDetails } from "./data/esc2024.js";
 import { useEffect, useState } from "react";
+import People from "./people.js";
+import { usePresence, useSubscribe } from "@rocicorp/reflect/react";
+import { getClientState } from "./state/client-state.js";
+import Flag from "react-world-flags";
 
 export default function RatingCard({ r }: { r: Reflect<M> }) {
   const [contrIndex, setContrIndex] = useState(1);
@@ -33,10 +37,35 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
     setContrIndex((prev) => prev + 1);
   };
 
+  const presentClientIDs = usePresence(r);
+  const presentClients = useSubscribe(
+    r,
+    async (tx) => {
+      const result = [];
+
+      for (const clientID of presentClientIDs) {
+        const presentClient = await getClientState(tx, clientID);
+
+        if (presentClient) {
+          result.push(presentClient);
+        }
+      }
+
+      return result;
+    },
+    [],
+    [presentClientIDs],
+  );
+
   return (
     <div className={c.outerContainer}>
+      <People r={r} />
+
       <div className={c.row}>
-        <div className={c.text}>{contribution.country}</div>
+        <div>
+          <Flag code={contribution.flag} />
+          <p className={c.text}>{contribution.country}</p>
+        </div>
       </div>
 
       <div className={c.row}>
@@ -55,10 +84,14 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
       </div>
 
       <UserInputs r={r} />
-      <MemberRatings r={r} color={"#f94144"} />
-      <MemberRatings r={r} color={"#f3722c"} />
-      <MemberRatings r={r} color={"#f8961e"} />
-      <MemberRatings r={r} color={"#f9844a"} />
+
+      {presentClients.map((client) => (
+        <MemberRatings
+          color={client.userInfo.color}
+          userID={client.userInfo.userID}
+          key={client.id}
+        />
+      ))}
     </div>
   );
 }

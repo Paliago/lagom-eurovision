@@ -1,16 +1,15 @@
-import { Reflect } from "@rocicorp/reflect/client";
-import { M } from "./mutators.js";
 import styles from "./member-ratings.module.css";
 
 export default function MemberRatings({
-  r,
   color,
+  userID,
 }: {
-  r: Reflect<M>;
   color: string;
+  userID: string;
 }) {
   return (
     <div className={styles.inputRow}>
+      <p>{userID}</p>
       <input
         type="number"
         value={6}

@@ -11,8 +11,8 @@
 import { Reflect } from "@rocicorp/reflect/client";
 import { useEffect } from "react";
 import styles from "./cursor-field.module.css";
-import { M } from "./mutators.js";
-import { useClientState } from "./subscriptions.js";
+import { M } from "./state/mutators.js";
+import { useClientState } from "./state/subscriptions.js";
 import { usePresence } from "@rocicorp/reflect/react";
 
 export default function CursorField({ r }: { r: Reflect<M> }) {
