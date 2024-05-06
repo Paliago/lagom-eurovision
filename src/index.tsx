@@ -1,6 +1,6 @@
 import { Reflect } from "@rocicorp/reflect/client";
 import { nanoid } from "nanoid";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import c from "./index.module.css";
 import { randUserInfo } from "./client-state.js";
@@ -24,6 +24,8 @@ const r = new Reflect({
 });
 
 function App() {
+  const [inRoom, setInRoom] = useState(false);
+
   useEffect(() => {
     void (async () => {
       const userInfo = randUserInfo();
@@ -33,7 +35,20 @@ function App() {
 
   return (
     <div className={c.outer}>
-      <RatingCard r={r} />
+      {!inRoom && (
+        <div className={c.outer}>
+          <h4>Join a Room</h4>
+
+          <input type="text" placeholder="UserName" />
+          <input type="text" placeholder="RoomID" />
+          <button>Join</button>
+        </div>
+      )}
+      {inRoom && (
+        <div>
+          <RatingCard r={r} />
+        </div>
+      )}
     </div>
   );
 }
