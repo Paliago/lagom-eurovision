@@ -7,6 +7,12 @@ export interface Rating {
   vibe?: number;
 }
 
+export const ratingFields: Array<keyof RatingEntity> = [
+  "music",
+  "performance",
+  "vibe",
+];
+
 export interface RatingEntity extends Rating {
   id: string;
 }

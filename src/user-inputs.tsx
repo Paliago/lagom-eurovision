@@ -4,7 +4,8 @@ import { Contribution } from "./data/esc2024.js";
 import { M } from "./state/mutators.js";
 import { useRating } from "./state/subscriptions.js";
 import styles from "./user-inputs.module.css";
-import { RatingEntity } from "./state/rating.js";
+import { RatingEntity, ratingFields } from "./state/rating.js";
+import { calcTotalRating } from "./util/utils.js";
 
 export default function UserInputs({
   r,
@@ -37,11 +38,9 @@ export default function UserInputs({
       });
     };
 
-  const fields: Array<keyof RatingEntity> = ["music", "performance", "vibe"];
-
   return (
     <div className={styles.inputRow}>
-      {fields.map((field) => (
+      {ratingFields.map((field) => (
         <input
           key={field}
           type="number"
@@ -56,11 +55,7 @@ export default function UserInputs({
       <input
         type="number"
         className={styles.totalDisplay}
-        value={
-          rating && rating.music && rating.performance && rating.vibe
-            ? (rating?.vibe + rating?.music + rating?.performance) / 3
-            : ""
-        }
+        value={calcTotalRating(rating)}
         disabled
       />
     </div>

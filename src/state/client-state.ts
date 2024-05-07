@@ -5,10 +5,8 @@
 import type { WriteTransaction } from "@rocicorp/reflect";
 import { Entity, generate } from "@rocicorp/rails";
 import { randUserInfo, UserInfo } from "./user";
-import { Rating } from "./rating";
 
 export type ClientState = Entity & {
-  ratings: Rating[];
   userInfo: UserInfo;
 };
 
@@ -26,7 +24,6 @@ async function initClientState(tx: WriteTransaction, userID: string) {
 
   return setClientState(tx, {
     id: tx.clientID,
-    ratings: [],
     userInfo,
   });
 }

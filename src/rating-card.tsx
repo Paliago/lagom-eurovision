@@ -90,8 +90,7 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
           client.id !== r.clientID && (
             <MemberRatings
               r={r}
-              color={client.userInfo.color}
-              userID={client.userInfo.userID}
+              userInfo={client.userInfo}
               songNumber={contribution.number}
               key={client.id}
             />

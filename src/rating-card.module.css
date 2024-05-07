@@ -1,5 +1,4 @@
 .outerContainer {
-  /* padding: 2rem 0; */
   display: flex;
   flex-direction: column;
   width: 80%;
@@ -20,6 +19,12 @@
 }
 
 @media (min-width: 768px) {
+  .outerContainer {
+    width: 60%;
+  }
+}
+
+@media (min-width: 1034px) {
   .outerContainer {
     width: 40%;
   }
