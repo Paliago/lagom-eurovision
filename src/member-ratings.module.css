@@ -34,8 +34,8 @@
   line-height: 2.5em;
   text-align: center;
   border: 0.125em solid #ccc;
-  color: #333;
   background: #fff;
+  color: #333;
   font-size: 1em;
 }
 
@@ -47,6 +47,7 @@
 .ratingsTotal {
   flex: 0 3 auto;
   width: 3.5em;
+  color: lightslategrey;
 }
 
 @media (min-width: 768px) {

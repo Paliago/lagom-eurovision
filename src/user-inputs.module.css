@@ -1,27 +1,49 @@
 .inputRow {
   display: flex;
   justify-content: space-evenly;
-  /* width: 100%; */
+  padding: 0.75rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+  background-color: #f0f0f0;
 }
 
-.inputField {
+.inputField,
+.totalDisplay {
   border-radius: 15%;
-  height: 3em;
-  width: 2em;
+  height: 2.5rem;
+  width: 3rem;
   font-weight: 700;
-  font-size: 1.25rem;
-  padding-left: 1.5em;
-  border: 1px solid #010101;
+  font-size: 1rem;
+  text-align: center;
+  border: 0.125rem solid #a7b6c2;
+  color: #333;
+  background: #ffffff;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.inputField:focus,
+.totalDisplay:focus {
+  outline: none;
+  border-color: #0077cc;
+  box-shadow: 0 0 0.5rem rgba(0, 119, 204, 0.25);
 }
 
 .totalDisplay {
-  border-radius: 15%;
-  height: 3em;
-  width: 2em;
-  font-weight: 700;
-  font-size: 1.25rem;
-  padding-left: 1.5em;
-  border: 1px solid #010101;
-  color: #000;
-  background: #fff;
+  cursor: default;
+  color: lightslategrey;
+}
+
+.inputRow:hover {
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 48em) {
+  .inputField,
+  .totalDisplay {
+    width: 4rem;
+    height: 3rem;
+    font-size: 1.25rem;
+  }
 }
