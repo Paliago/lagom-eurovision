@@ -29,7 +29,9 @@ export default function UserInputs({
         userID: r.userID,
         rating: {
           number: contribution.number,
-          ...rating,
+          music: rating?.music,
+          performance: rating?.performance,
+          vibe: rating?.vibe,
           [field]: newValue,
         },
       });
@@ -39,7 +41,6 @@ export default function UserInputs({
 
   return (
     <div className={styles.inputRow}>
-      <pre>{JSON.stringify(rating, null, 2)}</pre>
       {fields.map((field) => (
         <input
           key={field}

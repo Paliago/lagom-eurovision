@@ -24,7 +24,7 @@ export default function MemberRatings({
       <p>{userID}</p>
       <input
         type="number"
-        value={rating?.music}
+        value={rating?.music || ""}
         className={styles.ratings}
         style={{ borderColor: color }}
         min={0}
@@ -33,8 +33,7 @@ export default function MemberRatings({
       />
       <input
         type="number"
-        value={rating?.performance}
-        placeholder="6"
+        value={rating?.performance || ""}
         className={styles.ratings}
         style={{ borderColor: color }}
         min={0}
@@ -43,7 +42,7 @@ export default function MemberRatings({
       />
       <input
         type="number"
-        value={rating?.vibe}
+        value={rating?.vibe || ""}
         className={styles.ratings}
         style={{ borderColor: color }}
         min={0}

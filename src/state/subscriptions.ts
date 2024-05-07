@@ -27,9 +27,6 @@ export function useRating(
   reflect: Reflect<M>,
   { songNumber, userID }: { songNumber: number; userID: string },
 ) {
-  return useSubscribe(
-    reflect,
-    (tx) => getRating(tx, buildId(songNumber, userID)),
-    null,
-  );
+  const id = buildId(songNumber, userID);
+  return useSubscribe(reflect, (tx) => getRating(tx, id), null, [id]);
 }
