@@ -4,7 +4,6 @@ import { ChangeEvent, useState } from "react";
 import ReactDOM from "react-dom/client";
 import c from "./index.module.css";
 import { M, mutators } from "./state/mutators";
-import { randUserInfo } from "./state/client-state";
 import RatingCard from "./rating-card";
 
 const server: string | undefined = import.meta.env.VITE_REFLECT_URL;
@@ -27,8 +26,7 @@ export default function App() {
         mutators,
       });
 
-      const userInfo = randUserInfo(userID);
-      await reflect.mutate.initClientState(userInfo);
+      await reflect.mutate.initClientState(userID);
 
       setR(reflect);
     } else {

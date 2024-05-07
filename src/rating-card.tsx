@@ -83,14 +83,16 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
         <div className={c.text}>🟰</div>
       </div>
 
-      <UserInputs r={r} />
+      <UserInputs r={r} contribution={contribution} />
 
       {presentClients.map(
         (client) =>
           client.id !== r.clientID && (
             <MemberRatings
+              r={r}
               color={client.userInfo.color}
               userID={client.userInfo.userID}
+              songNumber={contribution.number}
               key={client.id}
             />
           ),
