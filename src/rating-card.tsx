@@ -37,6 +37,12 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
     setContrIndex((prev) => prev + 1);
   };
 
+  const infoBubble = () => {
+    alert(
+      "Music: How much you like the song\nPerformance and show: How much you like the performance and show\nVibes: How much you like the vibes of the song\nAverage: The average of the above three",
+    );
+  };
+
   const presentClientIDs = usePresence(r);
   const presentClients = useSubscribe(
     r,
@@ -61,26 +67,33 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
     <div className={c.outerContainer}>
       <People r={r} />
 
-      <div className={c.row}>
+      <div className={c.controller}>
+        <button onClick={handlePrev}>👈</button>
         <div>
           <Flag code={contribution.flag} />
-          <p className={c.text}>{contribution.country}</p>
+          <div className={c.text}>
+            {contribution.number}. {contribution.country}
+          </div>
+          <div className={c.text}>
+            {contribution.song} - {contribution.artist}
+          </div>
         </div>
-      </div>
-
-      <div className={c.row}>
-        <button onClick={handlePrev}>👈</button>
-        <h4 className={c.text}>
-          {contribution.number}. {contribution.song} - {contribution.artist}
-        </h4>
         <button onClick={handleNext}>👉</button>
       </div>
 
       <div className={c.row}>
-        <div className={c.text}>🎶</div>
-        <div className={c.text}>🕺</div>
-        <div className={c.text}>🧑‍🎤</div>
-        <div className={c.text}>🟰</div>
+        <div className={c.icon} title="Music" onClick={infoBubble}>
+          🎶
+        </div>
+        <div className={c.icon} title="Performance and show">
+          🕺
+        </div>
+        <div className={c.icon} title="Vibes 🌊🌊">
+          🧑‍🎤
+        </div>
+        <div className={c.icon} title="Average">
+          🟰
+        </div>
       </div>
 
       <UserInputs r={r} contribution={contribution} />

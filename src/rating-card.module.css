@@ -3,28 +3,66 @@
   flex-direction: column;
   width: 80%;
   gap: 1em;
+  padding: 1rem;
+  background: linear-gradient(145deg, #ffecd2 0%, #fcb69f 100%);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .row {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.controller {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  height: 15em;
 }
 
 .text {
-  color: #fc208a;
-  font-size: 1rem;
-  line-height: 1.2;
-  font-weight: 700;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  font-weight: 500;
+  flex: 1 1 100%;
 }
 
-@media (min-width: 768px) {
+.icon {
+  color: #3498db;
+  font-size: 2rem;
+}
+:hover {
+  cursor: pointer;
+}
+
+button {
+  border: none;
+  padding: 1.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.3s ease;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+@media (min-width: 48em) {
   .outerContainer {
     width: 60%;
   }
 }
 
-@media (min-width: 1034px) {
+@media (min-width: 64.625em) {
   .outerContainer {
     width: 40%;
   }
