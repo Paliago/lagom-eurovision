@@ -85,13 +85,16 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
 
       <UserInputs r={r} />
 
-      {presentClients.map((client) => (
-        <MemberRatings
-          color={client.userInfo.color}
-          userID={client.userInfo.userID}
-          key={client.id}
-        />
-      ))}
+      {presentClients.map(
+        (client) =>
+          client.id !== r.clientID && (
+            <MemberRatings
+              color={client.userInfo.color}
+              userID={client.userInfo.userID}
+              key={client.id}
+            />
+          ),
+      )}
     </div>
   );
 }

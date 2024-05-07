@@ -25,21 +25,15 @@ export default function People({ r }: { r: Reflect<M> }) {
     [presentClientIDs],
   );
 
-  const currentUser = presentClients.find(
-    (client) => client.userInfo.userID === r.userID,
-  );
-
   return (
     <div className={c.row}>
-      {presentClients.map((presentClient) => (
+      {presentClients.map((client) => (
         <div
           className={c.decal}
-          style={{ backgroundColor: presentClient.userInfo.color }}
-          key={presentClient.id}
+          style={{ backgroundColor: client.userInfo.color }}
+          key={client.id}
         >
-          <div>{presentClient.userInfo.avatar}</div>
-
-          <div>{presentClient.userInfo.userID}</div>
+          {client.userInfo.avatar} {client.userInfo.userID}
         </div>
       ))}
     </div>
