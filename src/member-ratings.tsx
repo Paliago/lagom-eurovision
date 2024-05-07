@@ -25,7 +25,9 @@ export default function MemberRatings({
   return (
     <div className={c.inputRow} style={{ backgroundColor: color }}>
       <div className={c.row} style={{ color: textColor }}>
-        <div className={c.avatar}>{avatar}</div>
+        <div className={c.avatar} title={animalName}>
+          {avatar}
+        </div>
         <div className={c.userName}>{userID}</div>
       </div>
       <div className={c.row}>
