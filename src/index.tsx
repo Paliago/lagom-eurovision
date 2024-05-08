@@ -5,6 +5,7 @@ import ReactDOM from "react-dom/client";
 import c from "./index.module.css";
 import { M, mutators } from "./state/mutators";
 import RatingCard from "./rating-card";
+import Scoreboard from "./scoreboard";
 
 const server: string | undefined = import.meta.env.VITE_REFLECT_URL;
 if (!server) {
@@ -12,9 +13,10 @@ if (!server) {
 }
 
 export default function App() {
-  const [r, setR] = useState<Reflect<M> | null>(null);
+  const [reflect, setReflect] = useState<Reflect<M> | null>(null);
   const [userID, setUserID] = useState("");
   const [roomID, setRoomID] = useState("");
+  const [showScoreboard, setShowScoreboard] = useState(false); // State to toggle scoreboard visibility
 
   const handleJoining = async () => {
     if (userID && roomID) {
@@ -28,24 +30,19 @@ export default function App() {
 
       await reflect.mutate.initClientState(userID);
 
-      setR(reflect);
+      setReflect(reflect);
+      setShowScoreboard(false); // Hide scoreboard when joining a new room
     } else {
       alert("Please enter both user name and room id");
     }
   };
 
-  const handleUserName = (evt: ChangeEvent<HTMLInputElement>) => {
-    setUserID(evt.target.value);
-  };
-
-  const handleRoomID = (evt: ChangeEvent<HTMLInputElement>) => {
-    setRoomID(evt.target.value);
-  };
+  const toggleScoreboard = () => setShowScoreboard(!showScoreboard);
 
   useEffect(() => {
     return () => {
-      if (r) {
-        r.close();
+      if (reflect) {
+        reflect.close();
       }
     };
   });
@@ -53,23 +50,32 @@ export default function App() {
   return (
     <>
       <div className={c.outer}>
-        {!r && (
+        <button
+          onClick={toggleScoreboard}
+          style={{ position: "fixed", top: 10, right: 10 }}
+        >
+          {showScoreboard ? "Back to Room" : "Show Scoreboard"}
+        </button>
+
+        {!reflect ? (
           <div className={c.outer}>
             <h4>Join a Room</h4>
-
             <input
               type="text"
               placeholder="UserName"
-              onChange={handleUserName}
+              onChange={(e) => setUserID(e.target.value)}
             />
-            <input type="text" placeholder="RoomID" onChange={handleRoomID} />
+            <input
+              type="text"
+              placeholder="RoomID"
+              onChange={(e) => setRoomID(e.target.value)}
+            />
             <button onClick={handleJoining}>Join</button>
           </div>
-        )}
-        {r && (
-          <>
-            <RatingCard r={r} />
-          </>
+        ) : showScoreboard ? (
+          <Scoreboard r={reflect} />
+        ) : (
+          <RatingCard r={reflect} />
         )}
       </div>
     </>
