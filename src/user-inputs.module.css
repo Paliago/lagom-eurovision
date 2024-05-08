@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-evenly;
   padding: 1rem;
-  border-radius: 1rem;
+  border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
   background-color: #e8f0fe;
   transition: all 0.3s ease;
@@ -10,20 +10,19 @@
 
 .inputField,
 .totalDisplay {
-  border-radius: 15%;
+  border-radius: 10px;
   height: 2.5rem;
   width: 3rem;
   font-weight: 700;
   font-size: 1rem;
   text-align: center;
-  border: 2px solid #ccd6f6;
+  border: transparent;
   color: #102a43;
   background: #ffffff;
   transition: all 0.3s ease;
 }
 
-.inputField:focus,
-.totalDisplay:focus {
+.inputField:focus {
   outline: none;
   border-color: #0056b3;
   box-shadow: 0 0 5px rgba(0, 86, 179, 0.5);

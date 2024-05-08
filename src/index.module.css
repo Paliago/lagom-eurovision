@@ -9,9 +9,15 @@ html,
 body {
   width: 100%;
   height: 100%;
-  /* overflow: hidden; */
+  overflow: hidden;
   margin: 0;
   padding: 0;
+  background: linear-gradient(
+    135deg,
+    #1a2a6c,
+    #b21f1f,
+    #fdbb2d
+  ); /* This ensures background covers the whole page */
 }
 
 input[type="number"]::-webkit-inner-spin-button {
@@ -67,16 +73,24 @@ button:active {
   transform: scale(0.99);
 }
 
-/* index.module.css */
 .outer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   height: 100vh;
   background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
   color: white;
   text-align: center;
+  width: 100%; /* Take full width */
+  overflow: auto; /* Adds scrolling to this container only */
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
 .form {
@@ -140,7 +154,18 @@ button:active {
 .buttonListButton {
   position: fixed;
   top: 0;
-  padding: 1em;
-  border-radius: 0 0 25% 25%;
+  right: 0;
+  padding: 1em 1.5em;
+  font-size: 1rem;
+  border-radius: 0 0 0 25%;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
   z-index: 100;
+  border: transparent;
+  background: lightslategrey;
+}
+
+.buttonListButton:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); /* Enhance shadow on hover */
 }

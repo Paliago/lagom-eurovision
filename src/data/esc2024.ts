@@ -48,21 +48,21 @@ export const contributions: Contributions = {
     artist: "LADANIVA",
     code: "AM",
   },
-  australia: {
-    song: "One Milkali (One Blood)",
-    artist: "Electric Fields",
-    code: "AU",
-  },
+  // australia: {
+  //   song: "One Milkali (One Blood)",
+  //   artist: "Electric Fields",
+  //   code: "AU",
+  // },
   austria: {
     song: "We Will Rave",
     artist: "Kaleen",
     code: "AT",
   },
-  azerbaijan: {
-    song: "Özünlə Apar",
-    artist: "FAHREE feat Ilkin Dovlatov",
-    code: "AZ",
-  },
+  // azerbaijan: {
+  //   song: "Özünlə Apar",
+  //   artist: "FAHREE feat Ilkin Dovlatov",
+  //   code: "AZ",
+  // },
   belgium: {
     song: "Before the Party's Over",
     artist: "Mustii",
@@ -118,11 +118,11 @@ export const contributions: Contributions = {
     artist: "Marina Satti",
     code: "GR",
   },
-  iceland: {
-    song: "Scared of Heights",
-    artist: "Hera Björk",
-    code: "IS",
-  },
+  // iceland: {
+  //   song: "Scared of Heights",
+  //   artist: "Hera Björk",
+  //   code: "IS",
+  // },
   ireland: {
     song: "Doomsday Blue",
     artist: "Bambie Thug",
@@ -158,11 +158,11 @@ export const contributions: Contributions = {
     artist: "Sarah Bonnici",
     code: "MT",
   },
-  moldova: {
-    song: "In The Middle",
-    artist: "Natalia Barbu",
-    code: "MD",
-  },
+  // moldova: {
+  //   song: "In The Middle",
+  //   artist: "Natalia Barbu",
+  //   code: "MD",
+  // },
   netherlands: {
     song: "Europapa",
     artist: "Joost Klein",
@@ -173,11 +173,11 @@ export const contributions: Contributions = {
     artist: "Gåte",
     code: "NO",
   },
-  poland: {
-    song: "The Tower",
-    artist: "LUNA",
-    code: "PL",
-  },
+  // poland: {
+  //   song: "The Tower",
+  //   artist: "LUNA",
+  //   code: "PL",
+  // },
   portugal: {
     song: "Grito",
     artist: "iolanda",

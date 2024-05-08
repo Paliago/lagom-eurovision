@@ -49,7 +49,7 @@ export default function App() {
   return (
     <div className={c.outer}>
       {!reflect ? (
-        <>
+        <div className={c.login}>
           <h1 className={c.title}>Lagom Eurovision</h1>
           <form
             onSubmit={(e) => {
@@ -74,11 +74,15 @@ export default function App() {
               Join
             </button>
           </form>
-        </>
+        </div>
       ) : (
         <>
-          <button onClick={toggleScoreboard} className={c.buttonListButton}>
-            {showScoreboard ? "Back to Room" : "Show Scoreboard"}
+          <button
+            onClick={toggleScoreboard}
+            className={c.buttonListButton}
+            title={showScoreboard ? "Go to voting" : "Go to scoreboard"}
+          >
+            {showScoreboard ? "📝" : "🥇"}
           </button>
           {showScoreboard ? (
             <Scoreboard r={reflect} />

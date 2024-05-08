@@ -20,15 +20,21 @@ export default function MemberRatings({
     userID,
   });
 
-  const textColor = getTextColorBasedOnBgColor(color);
-
   return (
     <div className={c.inputRow} style={{ backgroundColor: color }}>
-      <div className={c.row} style={{ color: textColor }}>
+      <div
+        className={c.row}
+        style={{ color: getTextColorBasedOnBgColor(color) }}
+      >
         <div className={c.avatar} title={animalName}>
           {avatar}
         </div>
-        <div className={c.userName}>{userID}</div>
+        <div
+          className={c.userName}
+          style={{ color: getTextColorBasedOnBgColor(color) }}
+        >
+          {userID}
+        </div>
       </div>
       <div className={c.ratingRow}>
         {ratingFields.map((field) => (

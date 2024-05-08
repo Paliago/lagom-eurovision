@@ -15,7 +15,6 @@ export default function Scoreboard({ r }: { r: Reflect<M> }) {
 
   return (
     <div className={c.outerContainer}>
-      <h1 className={c.title}>Scoreboard</h1>
       <button onClick={() => setRanked(!ranked)} className={c.button}>
         {ranked ? "Ranked" : "Ordered"}
       </button>
