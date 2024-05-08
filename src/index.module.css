@@ -38,36 +38,118 @@ button {
   -webkit-font-smoothing: antialiased;
 }
 
-.outer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0 auto;
-}
-
 button {
   display: inline-block;
   outline: none;
-  border: 0;
   text-decoration: none;
   cursor: pointer;
-  padding: 1rem;
-  border: 1px solid #fc208a;
   border-radius: 8px;
   background: #fff;
+  border: none;
   box-shadow: 0 2px 6px -2px rgb(0 0 0 / 37%);
-  transition: transform 200ms cubic-bezier(0.645, 0.045, 0.355, 1);
-  color: #fc208a;
+  transition:
+    background-color 0.3s,
+    transform 0.3s ease;
   font-size: 1rem;
-  line-height: 1.2;
   font-weight: 600;
   position: relative;
   -webkit-user-select: none; /* Safari */
   -ms-user-select: none; /* IE 10 and IE 11 */
   user-select: none; /* Standard syntax */
+  padding: 0.5rem 1rem;
 }
 
+button:hover {
+  background-color: #d3d3d3;
+}
 button:active {
   box-shadow: none;
   transform: scale(0.99);
+}
+
+/* index.module.css */
+.outer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+  color: white;
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.title {
+  font-size: 3rem;
+  font-family: "Montserrat", sans-serif;
+  text-transform: uppercase;
+  background-image: linear-gradient(to right, #f6d365 0%, #fda085 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -500px 0;
+  }
+  100% {
+    background-position: 500px 0;
+  }
+}
+
+.inputField {
+  margin: 20px 0;
+  padding: 10px;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  width: 300px;
+  color: black;
+  font-size: 1rem;
+  outline: none;
+}
+
+.button {
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  border-radius: 20px;
+  background-image: linear-gradient(to right, #f6d365 0%, #fda085 100%);
+  border: none;
+  cursor: pointer;
+  color: white;
+  font-family: "Montserrat", sans-serif;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease-out;
+}
+
+.button:hover {
+  transform: scale(1.1);
+}
+
+.button:focus {
+  outline: none;
+}
+/* .outer { */
+/*   display: flex; */
+/*   flex-direction: column; */
+/*   align-items: center; */
+/*   margin: 0 auto; */
+/* } */
+
+/* form { */
+/*   gap: 0.5em; */
+/* } */
+
+.buttonListButton {
+  position: fixed;
+  top: 0;
+  padding: 0.5em;
+  border-radius: 0 0 15% 15%;
 }

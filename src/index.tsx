@@ -17,6 +17,7 @@ export default function App() {
   const [userID, setUserID] = useState("");
   const [roomID, setRoomID] = useState("");
   const [showScoreboard, setShowScoreboard] = useState(false);
+
   const handleJoining = async () => {
     if (userID && roomID) {
       const reflect = new Reflect({
@@ -46,37 +47,47 @@ export default function App() {
   }, []);
 
   return (
-    <>
-      <div className={c.outer}>
-        <button
-          onClick={toggleScoreboard}
-          style={{ position: "fixed", top: 10, right: 10 }}
-        >
-          {showScoreboard ? "Back to Room" : "Show Scoreboard"}
-        </button>
-
-        {!reflect ? (
-          <div className={c.outer}>
-            <h4>Join a Room</h4>
+    <div className={c.outer}>
+      {!reflect ? (
+        <>
+          <h1 className={c.title}>Lagom Eurovision</h1>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleJoining();
+            }}
+            className={c.form}
+          >
             <input
               type="text"
-              placeholder="UserName"
               onChange={(e) => setUserID(e.target.value)}
+              placeholder="Enter your username"
+              className={c.inputField}
             />
             <input
               type="text"
-              placeholder="RoomID"
               onChange={(e) => setRoomID(e.target.value)}
+              placeholder="Enter room ID"
+              className={c.inputField}
             />
-            <button onClick={handleJoining}>Join</button>
-          </div>
-        ) : showScoreboard ? (
-          <div>test</div>
-        ) : (
-          <RatingCard r={reflect} />
-        )}
-      </div>
-    </>
+            <button type="submit" className={c.button}>
+              Join
+            </button>
+          </form>
+        </>
+      ) : (
+        <>
+          <button onClick={toggleScoreboard} className={c.buttonListButton}>
+            {showScoreboard ? "Back to Room" : "Show Scoreboard"}
+          </button>
+          {showScoreboard ? (
+            <Scoreboard r={reflect} />
+          ) : (
+            <RatingCard r={reflect} />
+          )}
+        </>
+      )}
+    </div>
   );
 }
 

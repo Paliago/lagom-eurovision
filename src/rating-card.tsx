@@ -65,7 +65,9 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
   return (
     <div className={c.outerContainer}>
       <div className={c.controller}>
-        <button onClick={handlePrev}>👈</button>
+        <button onClick={handlePrev} className={c.arrows}>
+          👈
+        </button>
         <div>
           <Flag code={contribution.flag} />
           <div className={c.text}>
@@ -75,7 +77,9 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
             {contribution.song} - {contribution.artist}
           </div>
         </div>
-        <button onClick={handleNext}>👉</button>
+        <button onClick={handleNext} className={c.arrows}>
+          👉
+        </button>
       </div>
 
       <div className={c.row}>
