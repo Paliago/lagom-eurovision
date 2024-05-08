@@ -5,7 +5,7 @@ import { M } from "./state/mutators.js";
 import { useClientState, useRating } from "./state/subscriptions.js";
 import styles from "./user-inputs.module.css";
 import { RatingEntity, ratingFields } from "./state/rating.js";
-import { calcTotalRating } from "./util/utils.js";
+import { calcTotalRating, formatNumber } from "./util/utils.js";
 
 export default function UserInputs({
   r,
@@ -58,7 +58,7 @@ export default function UserInputs({
       <input
         type="number"
         className={styles.totalDisplay}
-        value={calcTotalRating(rating)}
+        value={formatNumber(calcTotalRating(rating))}
         disabled
       />
     </div>

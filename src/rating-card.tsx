@@ -70,11 +70,13 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
         </button>
         <div>
           <Flag code={contribution.flag} height="100" />
-          <div className={c.text}>
-            {contribution.number}. {contribution.country}
-          </div>
-          <div className={c.text}>
-            {contribution.song} - {contribution.artist}
+          <div className={c.textBox}>
+            <div>
+              {contribution.number}. {contribution.country}
+            </div>
+            <div>
+              {contribution.song} - {contribution.artist}
+            </div>
           </div>
         </div>
         <button onClick={handleNext} className={c.arrows}>

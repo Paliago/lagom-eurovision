@@ -4,7 +4,11 @@ import { M } from "./state/mutators";
 import { useRating } from "./state/subscriptions";
 import { UserInfo } from "./state/user";
 import { ratingFields } from "./state/rating.js";
-import { calcTotalRating, getTextColorBasedOnBgColor } from "./util/utils";
+import {
+  calcTotalRating,
+  formatNumber,
+  getTextColorBasedOnBgColor,
+} from "./util/utils";
 
 export default function MemberRatings({
   r,
@@ -51,7 +55,7 @@ export default function MemberRatings({
         <input
           type="number"
           className={c.ratingsTotal}
-          value={calcTotalRating(rating)}
+          value={formatNumber(calcTotalRating(rating))}
           disabled
         />
       </div>

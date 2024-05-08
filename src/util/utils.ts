@@ -90,7 +90,10 @@ export const calculateAverages = (
   return averages;
 };
 
-export const formatNumber = (num: number): string | undefined => {
+export const formatNumber = (num: number | string): string | undefined => {
+  if (typeof num === "string") {
+    num = parseFloat(num);
+  }
   if (isNaN(num)) {
     return undefined;
   }
