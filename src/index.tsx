@@ -51,18 +51,28 @@ export default function App() {
   });
 
   return (
-    <div className={c.outer}>
-      {!r && (
-        <div className={c.outer}>
-          <h4>Join a Room</h4>
+    <>
+      <div className={c.outer}>
+        {!r && (
+          <div className={c.outer}>
+            <h4>Join a Room</h4>
 
-          <input type="text" placeholder="UserName" onChange={handleUserName} />
-          <input type="text" placeholder="RoomID" onChange={handleRoomID} />
-          <button onClick={handleJoining}>Join</button>
-        </div>
-      )}
-      {r && <RatingCard r={r} />}
-    </div>
+            <input
+              type="text"
+              placeholder="UserName"
+              onChange={handleUserName}
+            />
+            <input type="text" placeholder="RoomID" onChange={handleRoomID} />
+            <button onClick={handleJoining}>Join</button>
+          </div>
+        )}
+        {r && (
+          <>
+            <RatingCard r={r} />
+          </>
+        )}
+      </div>
+    </>
   );
 }
 

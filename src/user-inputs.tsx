@@ -2,7 +2,7 @@ import { Reflect } from "@rocicorp/reflect/client";
 import { ChangeEvent } from "react";
 import { Contribution } from "./data/esc2024.js";
 import { M } from "./state/mutators.js";
-import { useRating } from "./state/subscriptions.js";
+import { useClientState, useRating } from "./state/subscriptions.js";
 import styles from "./user-inputs.module.css";
 import { RatingEntity, ratingFields } from "./state/rating.js";
 import { calcTotalRating } from "./util/utils.js";
@@ -14,6 +14,7 @@ export default function UserInputs({
   r: Reflect<M>;
   contribution: Contribution;
 }) {
+  const client = useClientState(r, r.clientID);
   const rating = useRating(r, {
     songNumber: contribution.number,
     userID: r.userID,
@@ -39,7 +40,10 @@ export default function UserInputs({
     };
 
   return (
-    <div className={styles.inputRow}>
+    <div
+      className={styles.inputRow}
+      style={{ backgroundColor: client?.userInfo.color }}
+    >
       {ratingFields.map((field) => (
         <input
           key={field}

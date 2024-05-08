@@ -22,17 +22,10 @@ import { buildId, putRating, Rating } from "./rating.js";
 
 export const mutators = {
   initClientState,
-  increment,
   setRating,
 } satisfies MutatorDefs;
 
 export type M = typeof mutators;
-
-async function increment(tx: WriteTransaction, { delta }: { delta: number }) {
-  const prev = await tx.get<number>("count");
-  const next = (prev ?? 0) + delta;
-  await tx.set("count", next);
-}
 
 async function setRating(
   tx: WriteTransaction,

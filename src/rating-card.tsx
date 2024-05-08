@@ -5,7 +5,6 @@ import UserInputs from "./user-inputs.js";
 import MemberRatings from "./member-ratings.js";
 import { Contribution, getContributionDetails } from "./data/esc2024.js";
 import { useEffect, useState } from "react";
-import People from "./people.js";
 import { usePresence, useSubscribe } from "@rocicorp/reflect/react";
 import { getClientState } from "./state/client-state.js";
 import Flag from "react-world-flags";
@@ -65,8 +64,6 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
 
   return (
     <div className={c.outerContainer}>
-      <People r={r} />
-
       <div className={c.controller}>
         <button onClick={handlePrev}>👈</button>
         <div>
