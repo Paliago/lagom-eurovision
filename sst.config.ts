@@ -22,7 +22,10 @@ export default $config({
         command: "npm run build",
         output: "dist",
       },
-      domain: "lagomeuro.com",
+      domain: {
+        domain: "lagomeurovision.com",
+        aliases: ["www.lagomeurovision.com"],
+      },
     });
 
     return {
