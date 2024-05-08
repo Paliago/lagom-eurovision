@@ -69,7 +69,7 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
           👈
         </button>
         <div>
-          <Flag code={contribution.flag} />
+          <Flag code={contribution.flag} height="100" />
           <div className={c.text}>
             {contribution.number}. {contribution.country}
           </div>
@@ -86,13 +86,17 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
         <div className={c.icon} title="Music" onClick={infoBubble}>
           🎶
         </div>
-        <div className={c.icon} title="Performance and show">
+        <div
+          className={c.icon}
+          title="Performance and show"
+          onClick={infoBubble}
+        >
           🕺
         </div>
-        <div className={c.icon} title="Vibes 🌊🌊">
+        <div className={c.icon} title="Vibes 🌊🌊" onClick={infoBubble}>
           🧑‍🎤
         </div>
-        <div className={c.icon} title="Average">
+        <div className={c.icon} title="Average" onClick={infoBubble}>
           🟰
         </div>
       </div>

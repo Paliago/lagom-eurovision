@@ -30,7 +30,7 @@ export default function MemberRatings({
         </div>
         <div className={c.userName}>{userID}</div>
       </div>
-      <div className={c.row}>
+      <div className={c.ratingRow}>
         {ratingFields.map((field) => (
           <input
             key={field}

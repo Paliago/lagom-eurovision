@@ -13,7 +13,7 @@ import type { Reflect } from "@rocicorp/reflect/client";
 import { useSubscribe } from "@rocicorp/reflect/react";
 import { getClientState } from "./client-state.js";
 import type { M } from "./mutators.js";
-import { buildId, getRating } from "./rating.js";
+import { buildId, getRating, listRatings } from "./rating.js";
 
 export function useCount(reflect: Reflect<M>) {
   return useSubscribe(reflect, (tx) => tx.get<number>("count"), 0);
@@ -29,4 +29,8 @@ export function useRating(
 ) {
   const id = buildId(songNumber, userID);
   return useSubscribe(reflect, (tx) => getRating(tx, id), null, [id]);
+}
+
+export function useRatings(reflect: Reflect<M>) {
+  return useSubscribe(reflect, (tx) => listRatings(tx), null);
 }

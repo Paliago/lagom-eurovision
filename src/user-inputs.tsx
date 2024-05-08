@@ -22,21 +22,21 @@ export default function UserInputs({
 
   const handleChange =
     (field: keyof RatingEntity) => (evt: ChangeEvent<HTMLInputElement>) => {
-      const newValue = Number(evt.target.value) || undefined;
-      if (!newValue || newValue < 1 || newValue > 10) {
-        return;
-      }
+      const value = evt.target.value;
+      const newValue = value === "" ? "" : Number(value);
 
-      r.mutate.setRating({
-        userID: r.userID,
-        rating: {
-          number: contribution.number,
-          music: rating?.music,
-          performance: rating?.performance,
-          vibe: rating?.vibe,
-          [field]: newValue,
-        },
-      });
+      if (newValue === "" || (newValue >= 1 && newValue <= 10)) {
+        r.mutate.setRating({
+          userID: r.userID,
+          rating: {
+            number: contribution.number,
+            music: rating?.music,
+            performance: rating?.performance,
+            vibe: rating?.vibe,
+            [field]: newValue,
+          },
+        });
+      }
     };
 
   return (
@@ -48,7 +48,6 @@ export default function UserInputs({
         <input
           key={field}
           type="number"
-          placeholder="6"
           className={styles.inputField}
           min={1}
           max={10}

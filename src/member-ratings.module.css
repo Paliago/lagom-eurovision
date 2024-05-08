@@ -8,7 +8,6 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
   background-color: #e8f0fe;
   transition: box-shadow 0.3s ease;
-  margin: 1em;
 }
 
 .inputRow:hover {
@@ -19,6 +18,14 @@
   display: flex;
   width: 100%;
   justify-content: center;
+  align-items: center;
+  font-weight: 500;
+}
+
+.ratingRow {
+  display: flex;
+  width: 100%;
+  justify-content: space-evenly;
   align-items: center;
   font-weight: 500;
 }
@@ -57,23 +64,4 @@
   color: #102a43;
   flex: 0 3 auto;
   width: 3.5em;
-}
-
-@media (min-width: 768px) {
-  .inputRow {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1em;
-  }
-
-  .row {
-    flex: 1 1 auto;
-    justify-content: flex-start;
-    line-height: 1em;
-  }
-
-  .userName {
-    margin: 0 0.5em 0 0;
-  }
 }
