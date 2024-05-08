@@ -1,6 +1,6 @@
 import { Reflect } from "@rocicorp/reflect/client";
 import React, { useEffect } from "react";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import ReactDOM from "react-dom/client";
 import c from "./index.module.css";
 import { M, mutators } from "./state/mutators";
@@ -16,8 +16,7 @@ export default function App() {
   const [reflect, setReflect] = useState<Reflect<M> | null>(null);
   const [userID, setUserID] = useState("");
   const [roomID, setRoomID] = useState("");
-  const [showScoreboard, setShowScoreboard] = useState(false); // State to toggle scoreboard visibility
-
+  const [showScoreboard, setShowScoreboard] = useState(false);
   const handleJoining = async () => {
     if (userID && roomID) {
       const reflect = new Reflect({
@@ -31,7 +30,6 @@ export default function App() {
       await reflect.mutate.initClientState(userID);
 
       setReflect(reflect);
-      setShowScoreboard(false); // Hide scoreboard when joining a new room
     } else {
       alert("Please enter both user name and room id");
     }
@@ -45,7 +43,7 @@ export default function App() {
         reflect.close();
       }
     };
-  });
+  }, []);
 
   return (
     <>
@@ -73,7 +71,7 @@ export default function App() {
             <button onClick={handleJoining}>Join</button>
           </div>
         ) : showScoreboard ? (
-          <Scoreboard r={reflect} />
+          <div>test</div>
         ) : (
           <RatingCard r={reflect} />
         )}
