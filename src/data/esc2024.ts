@@ -2,7 +2,7 @@ export const getCountryDetails = (countries: string[]): Contribution[] =>
   countries.map((country, i) => {
     if (contributions[country]) {
       return {
-        number: i,
+        number: i + 1,
         country: country.charAt(0).toUpperCase() + country.slice(1),
         flag: contributions[country].code,
         song: contributions[country].song,
@@ -10,7 +10,7 @@ export const getCountryDetails = (countries: string[]): Contribution[] =>
       };
     } else {
       return {
-        number: i,
+        number: i + 1,
         country: country.charAt(0).toUpperCase() + country.slice(1),
         flag: "n/a",
         song: "n/a",
@@ -28,7 +28,7 @@ export interface Contribution {
 }
 
 export const getContributionDetails = (i: number) =>
-  getCountryDetails(countryList())[i];
+  getCountryDetails(countryList())[i - 1];
 
 export const countryList = () => Object.keys(contributions);
 
