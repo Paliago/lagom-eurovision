@@ -60,18 +60,24 @@ export default function App() {
             }}
             className={c.form}
           >
-            <input
-              type="text"
-              onChange={(e) => setUserID(e.target.value)}
-              placeholder="Enter your username"
-              className={c.inputField}
-            />
-            <input
-              type="text"
-              onChange={(e) => setRoomID(e.target.value)}
-              placeholder="Enter room ID"
-              className={c.inputField}
-            />
+            <div>
+              <div>Username</div>
+              <input
+                type="text"
+                onChange={(e) => setUserID(e.target.value)}
+                placeholder="Enter your username"
+                className={c.inputField}
+              />
+            </div>
+            <div>
+              <div>Room ID (Type the same as your friends)</div>
+              <input
+                type="text"
+                onChange={(e) => setRoomID(e.target.value)}
+                placeholder="Enter room ID"
+                className={c.inputField}
+              />
+            </div>
             <button type="submit" className={c.button}>
               Join
             </button>
