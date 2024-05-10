@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_REFLECT_URL: string;
-  readonly VITE_ROOM_ID: string;
+  VITE_BASELIME_API_KEY: string;
   // more env variables...
 }
 

@@ -16,7 +16,8 @@ export default $config({
   async run() {
     const site = new sst.aws.StaticSite("Euro", {
       environment: {
-        VITE_REFLECT_URL: "https://lagom-euro-paliago.reflect-server.net",
+        VITE_REFLECT_URL: process.env.VITE_REFLECT_URL,
+        VITE_BASELIME_API_KEY: process.env.VITE_BASELIME_API_KEY,
       },
       build: {
         command: "npm run build",

@@ -6,8 +6,10 @@ import c from "./index.module.css";
 import { M, mutators } from "./state/mutators";
 import RatingCard from "./rating-card";
 import Scoreboard from "./scoreboard";
+import { BaselimeRum, useBaselimeRum } from "@baselime/react-rum";
 
 const server: string | undefined = import.meta.env.VITE_REFLECT_URL;
+const baselimeKey: string | undefined = import.meta.env.VITE_BASELIME_API_KEY;
 if (!server) {
   throw new Error("VITE_REFLECT_URL required");
 }
@@ -19,6 +21,7 @@ export default function App() {
   const [showScoreboard, setShowScoreboard] = useState(false);
   const [index, setIndex] = useState(1);
   const [ranked, setRanked] = useState(true);
+  const { sendEvent, setUser } = useBaselimeRum();
 
   const handleJoining = async () => {
     if (userID && roomID) {
@@ -28,6 +31,12 @@ export default function App() {
         roomID,
         auth: userID,
         mutators,
+      });
+
+      setUser(`${roomID}/${userID}`);
+      sendEvent("Room joined", {
+        userID,
+        roomID,
       });
 
       await reflect.mutate.initClientState(userID);
@@ -111,6 +120,8 @@ const root = ReactDOM.createRoot(rootElement);
 
 root.render(
   <React.StrictMode>
-    <App />
+    <BaselimeRum apiKey={baselimeKey}>
+      <App />
+    </BaselimeRum>
   </React.StrictMode>,
 );
