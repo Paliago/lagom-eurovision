@@ -32,7 +32,7 @@ export default function RatingCard({
       setContribution(contr);
     }
 
-    loadContributions().catch(console.error);
+    loadContributions();
   }, [index]);
 
   const handlePrev = () => {

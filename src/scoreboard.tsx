@@ -1,5 +1,5 @@
 import { Reflect } from "@rocicorp/reflect/client";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import Flag from "react-world-flags";
 import { getContributionDetails } from "./data/esc2024";
 import c from "./scoreboard.module.css";
@@ -7,9 +7,16 @@ import { M } from "./state/mutators";
 import { useRatings } from "./state/subscriptions";
 import { calculateAverages, formatNumber } from "./util/utils";
 
-export default function Scoreboard({ r }: { r: Reflect<M> }) {
+export default function Scoreboard({
+  r,
+  ranked,
+  setRanked,
+}: {
+  r: Reflect<M>;
+  ranked: boolean;
+  setRanked: Dispatch<SetStateAction<boolean>>;
+}) {
   const ratings = useRatings(r);
-  const [ranked, setRanked] = useState(true);
 
   const organized = calculateAverages(ratings, ranked);
 
