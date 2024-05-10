@@ -23,7 +23,7 @@ export default $config({
         output: "dist",
       },
       domain: {
-        domain: "lagomeurovision.com",
+        name: "lagomeurovision.com",
         aliases: ["www.lagomeurovision.com"],
       },
     });
