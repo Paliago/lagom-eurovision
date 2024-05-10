@@ -13,6 +13,7 @@
   "devDependencies": {
     "@rocicorp/rails": "^0.7.0",
     "@rocicorp/reflect": "^0.39.202402230127+b70f6b",
+    "@types/aws-lambda": "^8.10.137",
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^2.0.1",
