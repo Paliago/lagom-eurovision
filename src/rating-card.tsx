@@ -36,11 +36,11 @@ export default function RatingCard({
   }, [index]);
 
   const handlePrev = () => {
-    setIndex((prev) => Math.max(1, prev - 1));
+    setIndex((prev) => (prev === 1 ? 26 : prev - 1));
   };
 
   const handleNext = () => {
-    setIndex((prev) => prev + 1);
+    setIndex((prev) => (prev === 26 ? 1 : prev + 1));
   };
 
   const infoBubble = () => {
