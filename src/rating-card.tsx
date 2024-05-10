@@ -4,13 +4,20 @@ import c from "./rating-card.module.css";
 import UserInputs from "./user-inputs.js";
 import MemberRatings from "./member-ratings.js";
 import { Contribution, getContributionDetails } from "./data/esc2024.js";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { usePresence, useSubscribe } from "@rocicorp/reflect/react";
 import { getClientState } from "./state/client-state.js";
 import Flag from "react-world-flags";
 
-export default function RatingCard({ r }: { r: Reflect<M> }) {
-  const [contrIndex, setContrIndex] = useState(1);
+export default function RatingCard({
+  r,
+  index,
+  setIndex,
+}: {
+  r: Reflect<M>;
+  index: number;
+  setIndex: Dispatch<SetStateAction<number>>;
+}) {
   const [contribution, setContribution] = useState<Contribution>({
     country: "",
     number: 1,
@@ -21,19 +28,19 @@ export default function RatingCard({ r }: { r: Reflect<M> }) {
 
   useEffect(() => {
     async function loadContributions() {
-      const contr = getContributionDetails(contrIndex);
+      const contr = getContributionDetails(index);
       setContribution(contr);
     }
 
     loadContributions().catch(console.error);
-  }, [contrIndex]);
+  }, [index]);
 
   const handlePrev = () => {
-    setContrIndex((prev) => Math.max(1, prev - 1));
+    setIndex((prev) => Math.max(1, prev - 1));
   };
 
   const handleNext = () => {
-    setContrIndex((prev) => prev + 1);
+    setIndex((prev) => prev + 1);
   };
 
   const infoBubble = () => {

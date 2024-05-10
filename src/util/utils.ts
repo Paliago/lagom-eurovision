@@ -90,13 +90,13 @@ export const calculateAverages = (
   return averages;
 };
 
-export const formatNumber = (num: number | string): string | undefined => {
+export const formatNumber = (num: number | string): string => {
+  if (num === "") return "";
   if (typeof num === "string") {
     num = parseFloat(num);
   }
-  if (isNaN(num)) {
-    return undefined;
-  }
+  if (isNaN(num)) return "";
+
   const formatted = num.toFixed(2);
   return formatted.endsWith(".00") ? formatted.slice(0, -3) : formatted;
 };

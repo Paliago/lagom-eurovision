@@ -17,6 +17,7 @@ export default function App() {
   const [userID, setUserID] = useState("");
   const [roomID, setRoomID] = useState("");
   const [showScoreboard, setShowScoreboard] = useState(false);
+  const [index, setIndex] = useState(1);
 
   const handleJoining = async () => {
     if (userID && roomID) {
@@ -87,7 +88,7 @@ export default function App() {
           {showScoreboard ? (
             <Scoreboard r={reflect} />
           ) : (
-            <RatingCard r={reflect} />
+            <RatingCard r={reflect} index={index} setIndex={setIndex} />
           )}
         </>
       )}
