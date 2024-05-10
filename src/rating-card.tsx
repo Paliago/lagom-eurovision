@@ -82,7 +82,7 @@ export default function RatingCard({
               {contribution.number}. {contribution.country}
             </div>
             <div>
-              {contribution.song} - {contribution.artist}
+              {contribution.artist} - {contribution.song}
             </div>
           </div>
         </div>

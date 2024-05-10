@@ -1,5 +1,5 @@
 import { Reflect } from "@rocicorp/reflect/client";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import Flag from "react-world-flags";
 import { getContributionDetails } from "./data/esc2024";
 import c from "./scoreboard.module.css";
