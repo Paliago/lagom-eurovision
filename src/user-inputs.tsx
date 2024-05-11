@@ -25,7 +25,7 @@ export default function UserInputs({
       const value = evt.target.value;
       const newValue = value === "" ? "" : Number(value);
 
-      if (newValue === "" || (newValue >= 1 && newValue <= 10)) {
+      if (newValue === "" || (newValue >= 1 && newValue <= 12)) {
         r.mutate.setRating({
           userID: r.userID,
           rating: {
@@ -49,8 +49,9 @@ export default function UserInputs({
           key={field}
           type="number"
           className={styles.inputField}
+          placeholder="1-12"
           min={1}
-          max={10}
+          max={12}
           value={rating?.[field] || ""}
           onChange={handleChange(field)}
         />

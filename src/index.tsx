@@ -21,6 +21,7 @@ export default function App() {
   const [showScoreboard, setShowScoreboard] = useState(false);
   const [index, setIndex] = useState(1);
   const [ranked, setRanked] = useState(true);
+  const [firstTime, setFirstTime] = useState(true);
   const { sendEvent, setUser } = useBaselimeRum();
 
   const handleJoining = async () => {
@@ -95,16 +96,28 @@ export default function App() {
       ) : (
         <>
           <button
+            className={c.leftButton}
+            onClick={() => setFirstTime(!firstTime)}
+          >
+            🆘
+          </button>
+          <button
             onClick={toggleScoreboard}
-            className={c.buttonListButton}
+            className={c.rightButton}
             title={showScoreboard ? "Go to voting" : "Go to scoreboard"}
           >
-            {showScoreboard ? "📝" : "🥇"}
+            {showScoreboard ? "✍️ " : "🏆"}
           </button>
           {showScoreboard ? (
             <Scoreboard r={reflect} ranked={ranked} setRanked={setRanked} />
           ) : (
-            <RatingCard r={reflect} index={index} setIndex={setIndex} />
+            <RatingCard
+              r={reflect}
+              index={index}
+              setIndex={setIndex}
+              firstTime={firstTime}
+              setFirstTime={setFirstTime}
+            />
           )}
         </>
       )}

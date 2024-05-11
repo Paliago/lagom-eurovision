@@ -13,10 +13,14 @@ export default function RatingCard({
   r,
   index,
   setIndex,
+  firstTime,
+  setFirstTime,
 }: {
   r: Reflect<M>;
   index: number;
   setIndex: Dispatch<SetStateAction<number>>;
+  firstTime: boolean;
+  setFirstTime: Dispatch<SetStateAction<boolean>>;
 }) {
   const [contribution, setContribution] = useState<Contribution>({
     country: "",
@@ -71,6 +75,31 @@ export default function RatingCard({
 
   return (
     <div className={c.outerContainer}>
+      {firstTime && (
+        <div
+          className={c.row}
+          style={{ cursor: "pointer", gap: "0.5em" }}
+          onClick={() => setFirstTime(false)}
+        >
+          <h4>Welcome!</h4>
+          <div style={{ width: "100%" }}>
+            In eurovision style you give a rating of 1-12!
+          </div>
+          <div style={{ width: "100%" }}>
+            To start just type your rating of the music, performance and vibe
+            🌊🌊 in the corresponding box. If you forget what they mean you can
+            always hover or click on the icons for some more info.
+          </div>
+          <div style={{ width: "100%" }}>
+            In the top right you have a button for the scoreboard where the
+            rankings of the participants are displayed. It's the total average
+            of all the votes in the room. Even if someone leaves the room the
+            their ratings will be counted.
+          </div>
+          <h4>Hide me</h4>
+        </div>
+      )}
+
       <div className={c.controller}>
         <button onClick={handlePrev} className={c.arrows}>
           👈

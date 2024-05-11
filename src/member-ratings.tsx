@@ -47,8 +47,6 @@ export default function MemberRatings({
             type="number"
             value={rating?.[field] || ""}
             className={c.ratings}
-            min={0}
-            max={10}
             disabled
           />
         ))}

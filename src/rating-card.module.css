@@ -21,6 +21,10 @@
   border-radius: 10px;
 }
 
+.description {
+  font-weight: 500;
+}
+
 .controller {
   display: flex;
   flex-direction: row;

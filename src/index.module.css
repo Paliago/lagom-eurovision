@@ -151,7 +151,22 @@ button:active {
   outline: none;
 }
 
-.buttonListButton {
+.leftButton {
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 1em 1.5em;
+  font-size: 1rem;
+  border-radius: 0 0 25% 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  z-index: 100;
+  border: transparent;
+  background: #fff;
+}
+
+.rightButton {
   position: fixed;
   top: 0;
   right: 0;
@@ -163,5 +178,5 @@ button:active {
   text-transform: uppercase;
   z-index: 100;
   border: transparent;
-  background: lightslategrey;
+  background: #fff;
 }
