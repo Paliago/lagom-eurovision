@@ -21,7 +21,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sst": "ion",
-    "typescript": "^4.7.4",
+    "typescript": "^5",
     "vite": "^3.0.7"
   },
   "dependencies": {

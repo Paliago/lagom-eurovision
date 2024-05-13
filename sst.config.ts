@@ -18,8 +18,8 @@ export default $config({
       handler: "functions/reflect-rooms.handler",
       url: true,
       environment: {
-        REFLECT_API_KEY: process.env.REFLECT_API_KEY,
-        REFLECT_ID: process.env.REFLECT_ID,
+        REFLECT_API_KEY: process.env.REFLECT_API_KEY!,
+        REFLECT_ID: process.env.REFLECT_ID!,
       },
     });
 
@@ -27,15 +27,15 @@ export default $config({
       handler: "functions/reflect-content.handler",
       url: true,
       environment: {
-        REFLECT_API_KEY: process.env.REFLECT_API_KEY,
-        REFLECT_ID: process.env.REFLECT_ID,
+        REFLECT_API_KEY: process.env.REFLECT_API_KEY!,
+        REFLECT_ID: process.env.REFLECT_ID!,
       },
     });
 
     const site = new sst.aws.StaticSite("Euro", {
       environment: {
-        VITE_REFLECT_URL: process.env.VITE_REFLECT_URL,
-        VITE_BASELIME_API_KEY: process.env.VITE_BASELIME_API_KEY,
+        VITE_REFLECT_URL: process.env.VITE_REFLECT_URL!,
+        VITE_BASELIME_API_KEY: process.env.VITE_BASELIME_API_KEY!,
       },
       build: {
         command: "npm run build",
