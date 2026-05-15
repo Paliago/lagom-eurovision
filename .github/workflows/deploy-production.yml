@@ -34,5 +34,13 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: eu-north-1
 
+      # Workaround for Pulumi version conflict:
+      # GitHub runners have Pulumi 3.212.0+ pre-installed, which removed the -root flag
+      # from pulumi-language-nodejs (see https://github.com/pulumi/pulumi/pull/21065).
+      # SST 3.17.x uses Pulumi SDK 3.210.0 which still passes -root, causing a conflict.
+      # Removing the system language plugin forces SST to use its bundled compatible version.
+      - name: Fix Pulumi version conflict
+        run: sudo rm -f /usr/local/bin/pulumi-language-nodejs
+
       - name: Deploy to production
         run: bun sst deploy --stage production
