@@ -236,7 +236,7 @@ const OverviewPage: React.FC = () => {
     }
 
     return (
-      <div className="overflow-x-auto -mx-5 px-5">
+      <div className="overflow-x-auto -mx-4 px-4">
         <table className="w-full min-w-[340px]">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -291,14 +291,14 @@ const OverviewPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 pb-4">
+    <div>
       {storedRoomId ? (
-        <div className="bg-[#1a1a26] rounded-2xl border border-white/[0.08] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="pb-6 border-b border-white/[0.06]">
+          <div className="flex items-center gap-2 mb-5">
             <Users className="size-4 text-[#8a8a9a]" />
-            <h2 className="text-lg font-extrabold tracking-tight text-[#f0f0f5]">
+            <h1 className="text-lg font-extrabold tracking-tight text-[#f0f0f5]">
               {roomName} Scores
-            </h2>
+            </h1>
           </div>
           {roomOverviewQueryData === undefined ? (
             <p className="text-center text-[#8a8a9a] text-sm py-8">Loading room overview...</p>
@@ -310,7 +310,7 @@ const OverviewPage: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="bg-[#1a1a26]/60 rounded-2xl border border-[#f5b800]/10 p-5 text-center">
+        <div className="pb-6 border-b border-white/[0.06]">
           <p className="text-[#f0f0f5] font-semibold mb-1">
             Room-specific averages are not available
           </p>
@@ -323,12 +323,12 @@ const OverviewPage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-[#1a1a26] rounded-2xl border border-white/[0.08] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="py-6">
+        <div className="flex items-center gap-2 mb-5">
           <Globe className="size-4 text-[#8a8a9a]" />
-          <h2 className="text-lg font-extrabold tracking-tight text-[#f0f0f5]">
+          <h1 className="text-lg font-extrabold tracking-tight text-[#f0f0f5]">
             Global Scores
-          </h2>
+          </h1>
         </div>
         {globalOverviewQueryData === undefined ? (
           <p className="text-center text-[#8a8a9a] text-sm py-8">Loading global overview...</p>

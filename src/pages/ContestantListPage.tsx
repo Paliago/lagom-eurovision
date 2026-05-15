@@ -12,17 +12,17 @@ const ContestantListPage: React.FC = () => {
 	const { trigger } = useHaptics();
 
 	return (
-		<div className="space-y-4">
-			<div className="flex items-center justify-between mb-2">
-				<h2 className="text-2xl font-extrabold tracking-tight text-[#f0f0f5]">
+		<div>
+			<div className="flex items-center justify-between mb-5 pb-4 border-b border-white/[0.06]">
+				<h1 className="text-2xl font-extrabold tracking-tight text-[#f0f0f5]">
 					Contestants
-				</h2>
-				<span className="text-xs font-semibold text-[#8a8a9a] bg-[#1a1a26] border border-white/[0.08] px-3 py-1 rounded-full">
+				</h1>
+				<span className="text-[11px] font-bold text-[#8a8a9a] uppercase tracking-widest">
 					{contestants.length} entries
 				</span>
 			</div>
 
-			<ul className="space-y-2">
+			<ul>
 				{contestants.map((contestant, index) => (
 					<li
 						key={contestant.id}
@@ -36,9 +36,9 @@ const ContestantListPage: React.FC = () => {
 								`/contestant/${contestant.id}`,
 							)}
 							onClick={() => trigger("light")}
-							className="group flex items-center gap-4 p-3.5 rounded-xl bg-[#1a1a26] border border-white/[0.06] transition-all duration-200 hover:bg-[#222233] hover:border-white/[0.12] active:scale-[0.98]"
+							className="group flex items-center gap-4 py-3.5 border-b border-white/[0.04] transition-colors duration-200 hover:bg-white/[0.02] active:scale-[0.99]"
 						>
-							<span className="text-xs font-bold text-[#8a8a9a] w-6 text-center shrink-0">
+							<span className="text-[11px] font-bold text-[#8a8a9a] w-5 text-center shrink-0">
 								{index + 1}
 							</span>
 
@@ -59,7 +59,7 @@ const ContestantListPage: React.FC = () => {
 								</p>
 							</div>
 
-							<span className="text-[10px] font-bold text-[#8a8a9a] bg-[#12121a] px-2 py-1 rounded-md shrink-0 uppercase tracking-wide">
+							<span className="text-[10px] font-bold text-[#8a8a9a] shrink-0 uppercase tracking-wide">
 								{contestant.country}
 							</span>
 						</Link>
