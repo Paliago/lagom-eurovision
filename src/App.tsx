@@ -5,6 +5,7 @@ import LandingPage from "./pages/LandingPage";
 import ContestantListPage from "./pages/ContestantListPage";
 import ContestantRatingPage from "./pages/ContestantRatingPage";
 import OverviewPage from "./pages/OverviewPage";
+import OgImagePage from "./pages/OgImagePage";
 import Layout from "./components/Layout";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
     <div className="App min-h-screen bg-[#0a0a0f] text-[#f0f0f5]">
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/og" element={<OgImagePage />} />
         <Route
           path="/room/:roomName/contestants"
           element={
