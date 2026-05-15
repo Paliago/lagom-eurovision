@@ -24,6 +24,8 @@ jobs:
         run: bun install
 
       - name: Deploy Convex
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: bun convex deploy -y
 
       - name: Configure AWS credentials
