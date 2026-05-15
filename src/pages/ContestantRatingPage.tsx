@@ -53,10 +53,10 @@ type CachedUserRating = {
 };
 
 type CachedPanelData = {
-	userRating?: CachedUserRating | null;
-	roomRatings?: any[];
-	globalRatings?: any;
-	roomUsers?: any[];
+  userRating?: CachedUserRating | null;
+  roomRatings?: any[];
+  globalRatings?: any;
+  roomUsers?: any[];
 };
 
 function getPanelCacheKey(
@@ -200,10 +200,16 @@ function ContestantPanel({
       ? { roomId: storedRoomId as Id<"rooms">, contestantId, userId }
       : "skip",
   );
-  const cachedPanelData = useMemo(
-    () => getCachedPanelData(year, storedRoomId, userId, contestantId),
-    [contestantId, storedRoomId, userId, year],
-  );
+  const [cachedPanelData, setCachedPanelDataState] =
+    useState<CachedPanelData | null>(() =>
+      getCachedPanelData(year, storedRoomId, userId, contestantId),
+    );
+
+  useEffect(() => {
+    setCachedPanelDataState(
+      getCachedPanelData(year, storedRoomId, userId, contestantId),
+    );
+  }, [contestantId, storedRoomId, userId, year]);
   const cachedUserRating = useMemo(
     () => cachedPanelData?.userRating ?? null,
     [cachedPanelData],
@@ -251,7 +257,7 @@ function ContestantPanel({
       return;
     }
 
-    setCachedPanelData(year, storedRoomId, userId, contestantId, {
+    const nextCachedPanelData = {
       ...cachedPanelData,
       userRating:
         currentUserRatingData === undefined
@@ -265,7 +271,15 @@ function ContestantPanel({
       globalRatings:
         allGlobalRatingsForContestant ?? cachedPanelData?.globalRatings,
       roomUsers: roomUsers ?? cachedPanelData?.roomUsers,
-    });
+    };
+    setCachedPanelDataState(nextCachedPanelData);
+    setCachedPanelData(
+      year,
+      storedRoomId,
+      userId,
+      contestantId,
+      nextCachedPanelData,
+    );
   }, [
     allGlobalRatingsForContestant,
     cachedPanelData,
