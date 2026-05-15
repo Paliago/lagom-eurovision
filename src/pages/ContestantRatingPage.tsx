@@ -196,9 +196,9 @@ function ContestantPanel({
   );
 
   const roomUsers = useQuery(
-    api.rooms.getRoomUsers,
+    api.ratings.getRoomUsersForYear,
     loadLiveData && storedRoomId
-      ? { roomId: storedRoomId as Id<"rooms"> }
+      ? { roomId: storedRoomId as Id<"rooms">, year }
       : "skip",
   );
 

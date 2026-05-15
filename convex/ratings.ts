@@ -239,6 +239,41 @@ export const getOverviewRatingsForRoom = query({
 });
 
 /**
+ * Query to fetch all unique users in a room who have submitted at least one rating
+ * for a specific year. This filters out users who only rated contestants from other years.
+ */
+export const getRoomUsersForYear = query({
+	args: {
+		roomId: v.id("rooms"),
+		year: v.number(),
+	},
+	returns: v.array(
+		v.object({ nickname: v.string(), userId: v.string() }),
+	),
+	handler: async (ctx, args) => {
+		const allRatingsInRoom = await ctx.db
+			.query("ratings")
+			.withIndex("by_roomId_contestantId", (q) => q.eq("roomId", args.roomId))
+			.collect();
+
+		const prefix = `esc${args.year}_`;
+		const yearRatings = allRatingsInRoom.filter((r) =>
+			r.contestantId.startsWith(prefix),
+		);
+
+		const uniqueUsers = new Map<string, string>();
+		for (const rating of yearRatings) {
+			uniqueUsers.set(rating.userId, rating.nickname);
+		}
+
+		return Array.from(uniqueUsers.entries()).map(([userId, nickname]) => ({
+			userId,
+			nickname,
+		}));
+	},
+});
+
+/**
  * Query to fetch all ratings for a specific contestant across all rooms and aggregate them.
  */
 export const getGlobalRatingsForContestant = query({
