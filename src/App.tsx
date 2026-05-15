@@ -9,7 +9,7 @@ import Layout from "./components/Layout";
 
 function App() {
   return (
-    <div className="App min-h-screen bg-gradient-to-br from-purple-600 to-red-400">
+    <div className="App min-h-screen bg-[#0a0a0f] text-[#f0f0f5]">
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route
@@ -64,8 +64,14 @@ function App() {
         <Route
           path="*"
           element={
-            <div>
-              Page Not Found <Link to="/">Go Home</Link>
+            <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-[#f0f0f5]">
+              <h1 className="text-3xl font-extrabold">Page Not Found</h1>
+              <Link
+                to="/"
+                className="text-[#f5b800] font-semibold hover:underline"
+              >
+                Go Home
+              </Link>
             </div>
           }
         />
