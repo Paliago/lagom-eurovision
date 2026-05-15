@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -19,10 +19,22 @@ import {
 	getContestantsByYear,
 	getNextContestantId,
 	getPreviousContestantId,
+	getContestantIndexById,
 } from "@/lib/contestants";
 import { useAppYear, buildRoomPath } from "@/lib/year";
 import { getAnimalEmojiForUser } from "@/lib/emoji";
 import { getBackgroundColorForRater } from "@/lib/colors";
+import { useEurovisionUser } from "@/lib/hooks";
+
+// Derive initial score from rating data, treating null/undefined as empty string
+function deriveInitialScore(
+	data: { musicScore?: number | null; performanceScore?: number | null; vibesScore?: number | null } | null | undefined,
+	key: "musicScore" | "performanceScore" | "vibesScore",
+): number | string {
+	if (!data) return "";
+	const val = data[key];
+	return typeof val === "number" ? val : "";
+}
 
 const ContestantRatingPage: React.FC = () => {
 	const { roomName, contestantId } = useParams<{
@@ -32,31 +44,22 @@ const ContestantRatingPage: React.FC = () => {
 	const navigate = useNavigate();
 	const year = useAppYear();
 	const contestants = getContestantsByYear(year);
+	const { userId, nickname: storedNickname, roomId: storedRoomId } = useEurovisionUser();
+	const currentNickname = storedNickname || "User";
 
 	const contestant: Contestant | null | undefined = contestantId
 		? getContestantById(contestantId, year)
 		: null;
 
 	const contestantOrder = contestantId
-		? contestants.findIndex((c) => c.id === contestantId) + 1
+		? (getContestantIndexById(contestantId, year) ?? -1) + 1
 		: 0;
 	const totalContestants = contestants.length;
-
-	const currentNickname = localStorage.getItem("eurovisionNickname") || "User";
-
-	const [musicScore, setMusicScore] = useState<number | string>("");
-	const [performanceScore, setPerformanceScore] = useState<number | string>("");
-	const [vibesScore, setVibesScore] = useState<number | string>("");
-
-	const userId = localStorage.getItem("eurovisionUserId");
-	const storedRoomId = localStorage.getItem(
-		"eurovisionRoomId",
-	) as Id<"rooms"> | null;
 
 	const roomRatingsForContestant = useQuery(
 		api.ratings.getRatingsForRoomAndContestant,
 		storedRoomId && contestantId
-			? { roomId: storedRoomId, contestantId: contestantId }
+			? { roomId: storedRoomId as Id<"rooms">, contestantId: contestantId }
 			: "skip",
 	);
 
@@ -67,15 +70,43 @@ const ContestantRatingPage: React.FC = () => {
 
 	const roomUsers = useQuery(
 		api.rooms.getRoomUsers,
-		storedRoomId ? { roomId: storedRoomId } : "skip",
+		storedRoomId ? { roomId: storedRoomId as Id<"rooms"> } : "skip",
 	);
 
 	const currentUserRatingData = useQuery(
 		api.ratings.getUserRatingForContestant,
 		storedRoomId && contestantId && userId
-			? { roomId: storedRoomId, contestantId: contestantId, userId: userId }
+			? { roomId: storedRoomId as Id<"rooms">, contestantId: contestantId, userId: userId }
 			: "skip",
 	);
+
+	// Use key-based reset: state resets automatically when contestantId changes
+	const [musicScore, setMusicScore] = useState<number | string>(() =>
+		deriveInitialScore(currentUserRatingData, "musicScore"),
+	);
+	const [performanceScore, setPerformanceScore] = useState<number | string>(() =>
+		deriveInitialScore(currentUserRatingData, "performanceScore"),
+	);
+	const [vibesScore, setVibesScore] = useState<number | string>(() =>
+		deriveInitialScore(currentUserRatingData, "vibesScore"),
+	);
+
+	// Minimal one-time sync: only initialize from server data when contestant changes
+	// and currentUserRatingData has finished loading. This avoids overwriting user edits
+	// on re-renders or data refetches.
+	const initializedContestantRef = useRef<string | null>(null);
+	useEffect(() => {
+		if (
+			contestantId &&
+			contestantId !== initializedContestantRef.current &&
+			currentUserRatingData !== undefined
+		) {
+			setMusicScore(currentUserRatingData?.musicScore ?? "");
+			setPerformanceScore(currentUserRatingData?.performanceScore ?? "");
+			setVibesScore(currentUserRatingData?.vibesScore ?? "");
+			initializedContestantRef.current = contestantId;
+		}
+	}, [contestantId, currentUserRatingData]);
 
 	const roomAverages = useMemo(() => {
 		if (!roomRatingsForContestant) {
@@ -158,7 +189,6 @@ const ContestantRatingPage: React.FC = () => {
 			};
 		}
 
-		// Directly use the pre-calculated averages from the query result
 		return {
 			music: allGlobalRatingsForContestant.avgMusic,
 			performance: allGlobalRatingsForContestant.avgPerformance,
@@ -239,7 +269,7 @@ const ContestantRatingPage: React.FC = () => {
 			if (scoreToSubmit !== null && storedRoomId && contestantId && userId) {
 				try {
 					await submitRatingMutation({
-						roomId: storedRoomId,
+						roomId: storedRoomId as Id<"rooms">,
 						contestantId,
 						userId,
 						nickname: currentNickname,
@@ -259,19 +289,7 @@ const ContestantRatingPage: React.FC = () => {
 		[storedRoomId, contestantId, userId, submitRatingMutation, currentNickname],
 	);
 
-	useEffect(() => {
-		if (currentUserRatingData) {
-			setMusicScore(currentUserRatingData.musicScore ?? "");
-			setPerformanceScore(currentUserRatingData.performanceScore ?? "");
-			setVibesScore(currentUserRatingData.vibesScore ?? "");
-		} else if (userId && storedRoomId && contestantId) {
-			setMusicScore("");
-			setPerformanceScore("");
-			setVibesScore("");
-		}
-	}, [currentUserRatingData, userId, storedRoomId, contestantId]);
-
-	const currentUserTotal = (() => {
+	const currentUserTotal = useMemo(() => {
 		const scores = [musicScore, performanceScore, vibesScore];
 		const validScores = scores.filter((s) => typeof s === "number");
 
@@ -283,37 +301,34 @@ const ContestantRatingPage: React.FC = () => {
 		return (
 			validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length
 		).toFixed(1);
-	})();
+	}, [musicScore, performanceScore, vibesScore]);
 
-	const navigateToContestant = (newContestantId: string | null) => {
-		if (newContestantId && roomName) {
-			setMusicScore("");
-			setPerformanceScore("");
-			setVibesScore("");
-			void navigate(
-				buildRoomPath(
-					year,
-					roomName,
-					`/contestant/${newContestantId}`,
-				),
-			);
-		}
-	};
+	const navigateToContestant = useCallback(
+		(newContestantId: string | null) => {
+			if (newContestantId && roomName) {
+				setMusicScore("");
+				setPerformanceScore("");
+				setVibesScore("");
+				void navigate(
+					buildRoomPath(
+						year,
+						roomName,
+						`/contestant/${newContestantId}`,
+					),
+				);
+			}
+		},
+		[navigate, roomName, year],
+	);
 
-	const handleNext = () =>
-		navigateToContestant(
-			contestantId ? getNextContestantId(contestantId, year) : null,
-		);
-	const handlePrevious = () =>
-		navigateToContestant(
-			contestantId ? getPreviousContestantId(contestantId, year) : null,
-		);
-
-	useEffect(() => {
-		setMusicScore("");
-		setPerformanceScore("");
-		setVibesScore("");
-	}, []);
+	const handleNext = useCallback(
+		() => navigateToContestant(contestantId ? getNextContestantId(contestantId, year) : null),
+		[navigateToContestant, contestantId, year],
+	);
+	const handlePrevious = useCallback(
+		() => navigateToContestant(contestantId ? getPreviousContestantId(contestantId, year) : null),
+		[navigateToContestant, contestantId, year],
+	);
 
 	if (!contestant || !contestantId) {
 		return (

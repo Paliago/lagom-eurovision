@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { getAnimalEmojiForUser } from "@/lib/emoji";
 import { useAppYear, buildRoomPath } from "@/lib/year";
+import { useEurovisionUser } from "@/lib/hooks";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -12,9 +13,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 	const { roomName } = useParams<{ roomName?: string }>();
 	const navigate = useNavigate();
 	const year = useAppYear();
-	const nickname = localStorage.getItem("eurovisionNickname") || "Guest";
-	const storedRoomId = localStorage.getItem("eurovisionRoomId");
-	const userId = localStorage.getItem("eurovisionUserId");
+	const { nickname: storedNickname, roomId: storedRoomId, userId } = useEurovisionUser();
+	const nickname = storedNickname || "Guest";
 
 	const handleViewOverview = () => {
 		if (roomName) {
