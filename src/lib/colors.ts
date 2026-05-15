@@ -1,20 +1,20 @@
-const tailwindColors = [
-	"bg-red-400",
-	"bg-yellow-400",
-	"bg-green-400",
-	"bg-teal-400",
-	"bg-blue-400",
-	"bg-indigo-400",
-	"bg-purple-400",
-	"bg-pink-400",
-	"bg-orange-400",
-	"bg-lime-400",
-	"bg-emerald-400",
-	"bg-cyan-400",
-	"bg-sky-400",
-	"bg-violet-400",
-	"bg-fuchsia-400",
-	"bg-rose-400",
+const darkThemeColors = [
+	"bg-[#3d1f1f]",
+	"bg-[#3d2a1f]",
+	"bg-[#2a3d1f]",
+	"bg-[#1f3d2a]",
+	"bg-[#1f2a3d]",
+	"bg-[#2a1f3d]",
+	"bg-[#3d1f2a]",
+	"bg-[#3d3a1f]",
+	"bg-[#1f3d3a]",
+	"bg-[#3a1f3d]",
+	"bg-[#2d3d1f]",
+	"bg-[#1f2d3d]",
+	"bg-[#3d1f3a]",
+	"bg-[#3d2d1f]",
+	"bg-[#1f3d2d]",
+	"bg-[#2a1f2a]",
 ];
 
 export const getBackgroundColorForRater = (raterId: string): string => {
@@ -24,6 +24,6 @@ export const getBackgroundColorForRater = (raterId: string): string => {
 		hash = (hash << 5) - hash + char;
 		hash |= 0; // Convert to 32bit integer
 	}
-	const index = Math.abs(hash) % tailwindColors.length;
-	return tailwindColors[index];
+	const index = Math.abs(hash) % darkThemeColors.length;
+	return darkThemeColors[index];
 };
