@@ -46,8 +46,84 @@ const CATEGORY_META = {
   vibes: { label: "Vibes", icon: "🧑‍🎤", color: "#22d3ee" },
 } as const;
 
-const SWIPE_WINDOW_SIZE = 9;
-const SWIPE_WINDOW_RADIUS = Math.floor(SWIPE_WINDOW_SIZE / 2);
+type CachedUserRating = {
+  musicScore?: number | null;
+  performanceScore?: number | null;
+  vibesScore?: number | null;
+};
+
+type CachedPanelData = {
+	userRating?: CachedUserRating | null;
+	roomRatings?: any[];
+	globalRatings?: any;
+	roomUsers?: any[];
+};
+
+function getPanelCacheKey(
+  year: number,
+  roomId: string | null,
+  userId: string | null,
+  contestantId: string,
+) {
+  if (!roomId || !userId) return null;
+  return `eurovisionPanel:${year}:${roomId}:${userId}:${contestantId}`;
+}
+
+function getCachedPanelData(
+  year: number,
+  roomId: string | null,
+  userId: string | null,
+  contestantId: string,
+): CachedPanelData | null {
+  const cacheKey = getPanelCacheKey(year, roomId, userId, contestantId);
+  if (!cacheKey) return null;
+  try {
+    const cachedData = window.localStorage.getItem(cacheKey);
+    return cachedData ? (JSON.parse(cachedData) as CachedPanelData) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedPanelData(
+  year: number,
+  roomId: string | null,
+  userId: string | null,
+  contestantId: string,
+  data: CachedPanelData,
+) {
+  const cacheKey = getPanelCacheKey(year, roomId, userId, contestantId);
+  if (!cacheKey) return;
+  try {
+    window.localStorage.setItem(cacheKey, JSON.stringify(data));
+  } catch {
+    // Ignore cache write failures; Convex remains the source of truth.
+  }
+}
+
+function setCachedUserRating(
+  year: number,
+  roomId: string | null,
+  userId: string | null,
+  contestantId: string,
+  rating: CachedUserRating,
+) {
+  if (!roomId || !userId) return;
+  try {
+    const cachedPanelData = getCachedPanelData(
+      year,
+      roomId,
+      userId,
+      contestantId,
+    );
+    setCachedPanelData(year, roomId, userId, contestantId, {
+      ...cachedPanelData,
+      userRating: rating,
+    });
+  } catch {
+    // Ignore cache write failures; Convex remains the source of truth.
+  }
+}
 
 function useCoarsePointer(): boolean {
   const [isCoarsePointer, setIsCoarsePointer] = useState(
@@ -70,6 +146,7 @@ interface ContestantPanelProps {
   roomName: string;
   year: number;
   isActive: boolean;
+  loadLiveData: boolean;
   onNavigate: (direction: "previous" | "next") => void;
 }
 
@@ -78,6 +155,7 @@ function ContestantPanel({
   roomName,
   year,
   isActive,
+  loadLiveData,
   onNavigate,
 }: ContestantPanelProps) {
   const contestants = getContestantsByYear(year);
@@ -99,53 +177,112 @@ function ContestantPanel({
 
   const roomRatingsForContestant = useQuery(
     api.ratings.getRatingsForRoomAndContestant,
-    storedRoomId
+    loadLiveData && storedRoomId
       ? { roomId: storedRoomId as Id<"rooms">, contestantId }
       : "skip",
   );
 
   const allGlobalRatingsForContestant = useQuery(
     api.ratings.getGlobalRatingsForContestant,
-    { contestantId },
+    loadLiveData ? { contestantId } : "skip",
   );
 
   const roomUsers = useQuery(
     api.rooms.getRoomUsers,
-    storedRoomId ? { roomId: storedRoomId as Id<"rooms"> } : "skip",
+    loadLiveData && storedRoomId
+      ? { roomId: storedRoomId as Id<"rooms"> }
+      : "skip",
   );
 
   const currentUserRatingData = useQuery(
     api.ratings.getUserRatingForContestant,
-    storedRoomId && userId
+    loadLiveData && storedRoomId && userId
       ? { roomId: storedRoomId as Id<"rooms">, contestantId, userId }
       : "skip",
   );
+  const cachedPanelData = useMemo(
+    () => getCachedPanelData(year, storedRoomId, userId, contestantId),
+    [contestantId, storedRoomId, userId, year],
+  );
+  const cachedUserRating = useMemo(
+    () => cachedPanelData?.userRating ?? null,
+    [cachedPanelData],
+  );
+  const effectiveRoomRatingsForContestant =
+    roomRatingsForContestant ?? cachedPanelData?.roomRatings ?? null;
+  const effectiveGlobalRatingsForContestant =
+    allGlobalRatingsForContestant ?? cachedPanelData?.globalRatings ?? null;
+  const effectiveRoomUsers = roomUsers ?? cachedPanelData?.roomUsers ?? null;
+  const initialUserRatingData = currentUserRatingData ?? cachedUserRating;
 
   const [musicScore, setMusicScore] = useState<number | string>(() =>
-    deriveInitialScore(currentUserRatingData, "musicScore"),
+    deriveInitialScore(initialUserRatingData, "musicScore"),
   );
   const [performanceScore, setPerformanceScore] = useState<number | string>(
-    () => deriveInitialScore(currentUserRatingData, "performanceScore"),
+    () => deriveInitialScore(initialUserRatingData, "performanceScore"),
   );
   const [vibesScore, setVibesScore] = useState<number | string>(() =>
-    deriveInitialScore(currentUserRatingData, "vibesScore"),
+    deriveInitialScore(initialUserRatingData, "vibesScore"),
   );
 
   const initializedContestantRef = useRef<string | null>(null);
   useEffect(() => {
+    const shouldInitializeFromCache =
+      contestantId !== initializedContestantRef.current;
+    const shouldRefreshFromLiveData =
+      loadLiveData && currentUserRatingData !== undefined;
+
+    if (!shouldInitializeFromCache && !shouldRefreshFromLiveData) return;
+
+    const ratingData = currentUserRatingData ?? cachedUserRating;
+    setMusicScore(ratingData?.musicScore ?? "");
+    setPerformanceScore(ratingData?.performanceScore ?? "");
+    setVibesScore(ratingData?.vibesScore ?? "");
+    initializedContestantRef.current = contestantId;
+  }, [cachedUserRating, contestantId, currentUserRatingData, loadLiveData]);
+
+  useEffect(() => {
     if (
-      contestantId !== initializedContestantRef.current &&
-      currentUserRatingData !== undefined
+      currentUserRatingData === undefined &&
+      roomRatingsForContestant === undefined &&
+      allGlobalRatingsForContestant === undefined &&
+      roomUsers === undefined
     ) {
-      setMusicScore(currentUserRatingData?.musicScore ?? "");
-      setPerformanceScore(currentUserRatingData?.performanceScore ?? "");
-      setVibesScore(currentUserRatingData?.vibesScore ?? "");
-      initializedContestantRef.current = contestantId;
+      return;
     }
-  }, [contestantId, currentUserRatingData]);
+
+    setCachedPanelData(year, storedRoomId, userId, contestantId, {
+      ...cachedPanelData,
+      userRating:
+        currentUserRatingData === undefined
+          ? cachedPanelData?.userRating
+          : {
+              musicScore: currentUserRatingData?.musicScore ?? null,
+              performanceScore: currentUserRatingData?.performanceScore ?? null,
+              vibesScore: currentUserRatingData?.vibesScore ?? null,
+            },
+      roomRatings: roomRatingsForContestant ?? cachedPanelData?.roomRatings,
+      globalRatings:
+        allGlobalRatingsForContestant ?? cachedPanelData?.globalRatings,
+      roomUsers: roomUsers ?? cachedPanelData?.roomUsers,
+    });
+  }, [
+    allGlobalRatingsForContestant,
+    cachedPanelData,
+    contestantId,
+    currentUserRatingData,
+    roomRatingsForContestant,
+    roomUsers,
+    storedRoomId,
+    userId,
+    year,
+  ]);
 
   const roomAverages = useMemo(() => {
-    if (!roomRatingsForContestant || roomRatingsForContestant.length === 0) {
+    if (
+      !effectiveRoomRatingsForContestant ||
+      effectiveRoomRatingsForContestant.length === 0
+    ) {
       return {
         music: null,
         performance: null,
@@ -163,7 +300,7 @@ function ContestantPanel({
     let countVibes = 0;
     const uniqueRaters = new Set<string>();
 
-    for (const rating of roomRatingsForContestant) {
+    for (const rating of effectiveRoomRatingsForContestant) {
       uniqueRaters.add(rating.userId);
       if (typeof rating.musicScore === "number") {
         sumMusic += rating.musicScore;
@@ -202,10 +339,10 @@ function ContestantPanel({
       total: totalAvg !== null ? Number.parseFloat(totalAvg.toFixed(1)) : null,
       count: uniqueRaters.size,
     };
-  }, [roomRatingsForContestant]);
+  }, [effectiveRoomRatingsForContestant]);
 
   const globalAverages = useMemo(() => {
-    if (!allGlobalRatingsForContestant) {
+    if (!effectiveGlobalRatingsForContestant) {
       return {
         music: null,
         performance: null,
@@ -215,21 +352,23 @@ function ContestantPanel({
       };
     }
     return {
-      music: allGlobalRatingsForContestant.avgMusic,
-      performance: allGlobalRatingsForContestant.avgPerformance,
-      vibes: allGlobalRatingsForContestant.avgVibes,
-      total: allGlobalRatingsForContestant.totalAvg,
-      count: allGlobalRatingsForContestant.numRaters,
+      music: effectiveGlobalRatingsForContestant.avgMusic,
+      performance: effectiveGlobalRatingsForContestant.avgPerformance,
+      vibes: effectiveGlobalRatingsForContestant.avgVibes,
+      total: effectiveGlobalRatingsForContestant.totalAvg,
+      count: effectiveGlobalRatingsForContestant.numRaters,
     };
-  }, [allGlobalRatingsForContestant]);
+  }, [effectiveGlobalRatingsForContestant]);
 
   const otherIndividualRatings = useMemo(() => {
-    if (!roomUsers || !userId || !roomRatingsForContestant) return [];
+    if (!effectiveRoomUsers || !userId || !effectiveRoomRatingsForContestant) {
+      return [];
+    }
 
-    return roomUsers
+    return effectiveRoomUsers
       .filter((roomUser) => roomUser.userId !== userId)
       .map((roomUser) => {
-        const existingRating = roomRatingsForContestant.find(
+        const existingRating = effectiveRoomRatingsForContestant.find(
           (r) => r.userId === roomUser.userId,
         );
         const m = existingRating?.musicScore ?? null;
@@ -254,7 +393,7 @@ function ContestantPanel({
               : null,
         };
       });
-  }, [roomUsers, roomRatingsForContestant, userId]);
+  }, [effectiveRoomUsers, effectiveRoomRatingsForContestant, userId]);
 
   const submitRatingMutation = useMutation(api.ratings.submitRating);
 
@@ -291,6 +430,26 @@ function ContestantPanel({
       }
 
       if (scoreToSubmit !== null && storedRoomId && userId) {
+        setCachedUserRating(year, storedRoomId, userId, contestantId, {
+          musicScore:
+            category === "music"
+              ? scoreToSubmit
+              : typeof musicScore === "number"
+                ? musicScore
+                : null,
+          performanceScore:
+            category === "performance"
+              ? scoreToSubmit
+              : typeof performanceScore === "number"
+                ? performanceScore
+                : null,
+          vibesScore:
+            category === "vibes"
+              ? scoreToSubmit
+              : typeof vibesScore === "number"
+                ? vibesScore
+                : null,
+        });
         trigger("selection");
         try {
           await submitRatingMutation({
@@ -311,10 +470,14 @@ function ContestantPanel({
       contestantId,
       currentNickname,
       isActive,
+      musicScore,
+      performanceScore,
       storedRoomId,
       submitRatingMutation,
       trigger,
       userId,
+      vibesScore,
+      year,
     ],
   );
 
@@ -648,18 +811,8 @@ const ContestantRatingPage: React.FC = () => {
     activeContestantIndex < contestants.length - 1
       ? (contestants[activeContestantIndex + 1]?.id ?? null)
       : null;
-  const windowStartIndex = Math.max(
-    0,
-    Math.min(
-      activeContestantIndex - SWIPE_WINDOW_RADIUS,
-      Math.max(0, contestants.length - SWIPE_WINDOW_SIZE),
-    ),
-  );
-  const visibleContestants = contestants.slice(
-    windowStartIndex,
-    windowStartIndex + SWIPE_WINDOW_SIZE,
-  );
-  const activePanelIndex = activeContestantIndex - windowStartIndex;
+  const visibleContestants = contestants;
+  const activePanelIndex = activeContestantIndex;
 
   useEffect(() => {
     if (routeContestantIndex == null) return;
@@ -681,7 +834,7 @@ const ContestantRatingPage: React.FC = () => {
     resizeObserver.observe(container);
 
     return () => resizeObserver.disconnect();
-  }, [activeContestantIndex, activePanelIndex, windowStartIndex]);
+  }, [activeContestantIndex, activePanelIndex]);
 
   useLayoutEffect(() => {
     setIsAnimating(false);
@@ -691,12 +844,7 @@ const ContestantRatingPage: React.FC = () => {
       window.clearTimeout(snapCompletionTimeoutRef.current);
       snapCompletionTimeoutRef.current = null;
     }
-  }, [
-    activeContestantIndex,
-    activePanelIndex,
-    containerWidth,
-    windowStartIndex,
-  ]);
+  }, [activeContestantIndex, activePanelIndex, containerWidth]);
 
   const navigateToContestant = useCallback(
     (newContestantId: string | null) => {
@@ -751,7 +899,7 @@ const ContestantRatingPage: React.FC = () => {
         0,
         Math.min(visibleContestants.length - 1, targetPanelIndex),
       );
-      const targetContestantIndex = windowStartIndex + clampedPanelIndex;
+      const targetContestantIndex = clampedPanelIndex;
       pendingContestantIndexRef.current =
         targetContestantIndex === activeContestantIndex
           ? null
@@ -770,7 +918,6 @@ const ContestantRatingPage: React.FC = () => {
       completePendingSnap,
       containerWidth,
       visibleContestants.length,
-      windowStartIndex,
     ],
   );
 
@@ -924,6 +1071,7 @@ const ContestantRatingPage: React.FC = () => {
           roomName={roomName}
           year={year}
           isActive
+          loadLiveData
           onNavigate={(direction) => {
             const targetContestantId =
               direction === "previous"
@@ -977,6 +1125,7 @@ const ContestantRatingPage: React.FC = () => {
               roomName={roomName}
               year={year}
               isActive={panelIndex === activePanelIndex}
+              loadLiveData={panelIndex === activePanelIndex}
               onNavigate={handlePanelNavigate}
             />
           </div>
