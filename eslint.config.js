@@ -8,11 +8,14 @@ export default tseslint.config(
   {
     ignores: [
       "dist",
+      ".sst",
       "eslint.config.js",
       "convex/_generated",
       "postcss.config.js",
       "tailwind.config.js",
       "vite.config.ts",
+      "sst.config.ts",
+      "sst-env.d.ts",
     ],
   },
   {
