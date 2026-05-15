@@ -300,7 +300,7 @@ const OverviewPage: React.FC = () => {
   }
 
   return (
-    <div className="py-5">
+    <div className="flex-1 overflow-y-auto py-5">
       {storedRoomId ? (
         <div className="pb-6 border-b border-white/[0.06]">
           <div className="flex items-center gap-2 mb-5">

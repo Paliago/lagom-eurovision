@@ -105,13 +105,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 			</header>
 
 			{/* Main content */}
-			<main className="flex-1 w-full max-w-lg mx-auto px-4">
+			<main className="flex-1 overflow-hidden flex flex-col w-full max-w-lg mx-auto px-4">
 				{children}
 			</main>
 
 			{/* Bottom tab bar — only show inside rooms */}
 			{roomName && (
 				<nav className="sticky bottom-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[env(safe-area-inset-bottom)]">
+					<div id="bottom-navbar-content" className="max-w-lg mx-auto px-4" />
 					<div className="max-w-lg mx-auto h-14 flex items-stretch">
 						<button
 							onClick={handleNavigateToContestantList}

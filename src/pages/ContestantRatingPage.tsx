@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -148,6 +149,16 @@ function useCoarsePointer(): boolean {
   return isCoarsePointer;
 }
 
+function useBottomNavbarContentElement(): HTMLElement | null {
+  const [element, setElement] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setElement(document.getElementById("bottom-navbar-content"));
+  }, []);
+
+  return element;
+}
+
 interface ContestantPanelProps {
   contestantId: string;
   roomName: string;
@@ -173,6 +184,7 @@ function ContestantPanel({
   } = useEurovisionUser();
   const currentNickname = storedNickname || "User";
   const { trigger } = useHaptics();
+  const bottomNavbarContentElement = useBottomNavbarContentElement();
 
   const contestant: Contestant | null | undefined = getContestantById(
     contestantId,
@@ -570,9 +582,65 @@ function ContestantPanel({
     }
   };
 
+  const yourRatingContent = (
+    <div className="bg-[#0a0a0f]/95 backdrop-blur-xl py-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm">{getAnimalEmojiForUser(userId)}</span>
+          <span className="text-[11px] font-bold text-[#f5b800] uppercase tracking-widest">
+            Your Rating
+          </span>
+        </div>
+        <span className="text-xs font-bold text-[#8a8a9a]">
+          {currentNickname}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {(["music", "performance", "vibes"] as const).map((cat) => (
+          <div key={cat} className="flex flex-col items-center gap-1">
+            <span className="text-base leading-none">
+              {CATEGORY_META[cat].icon}
+            </span>
+            <Input
+              type="number"
+              value={getCurrentScore(cat)}
+              onChange={(e) => {
+                void handleRatingChange(cat, e.target.value);
+              }}
+              min="1"
+              max="12"
+              placeholder="—"
+              className="h-11 text-center text-base font-extrabold bg-[#12121a] border-white/[0.08] focus-visible:border-[#f5b800]/40 focus-visible:ring-[#f5b800]/20 rounded-xl"
+              aria-label={`${CATEGORY_META[cat].label} score input`}
+            />
+            <span className="text-[9px] font-bold text-[#8a8a9a] uppercase tracking-wider">
+              {CATEGORY_META[cat].label}
+            </span>
+          </div>
+        ))}
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-base leading-none">⭐</span>
+          <div className="h-11 flex items-center justify-center w-full rounded-xl bg-[#f5b800]/10 border border-[#f5b800]/20">
+            <span className="text-lg font-extrabold text-[#f5b800] tabular-nums">
+              {currentUserTotal}
+            </span>
+          </div>
+          <span className="text-[9px] font-bold text-[#8a8a9a] uppercase tracking-wider">
+            Total
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-full pt-5 flex flex-col">
-      <div className="text-center pb-6 border-b border-white/[0.06]">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      {isActive && bottomNavbarContentElement
+        ? createPortal(yourRatingContent, bottomNavbarContentElement)
+        : null}
+      <div className="flex-1 overflow-y-auto min-h-0 pt-5">
+        <div className="text-center pb-6 border-b border-white/[0.06]">
         <p className="text-[11px] font-bold text-[#8a8a9a] uppercase tracking-widest mb-4">
           {contestantOrder} of {totalContestants}
         </p>
@@ -688,7 +756,7 @@ function ContestantPanel({
       </div>
 
       {otherIndividualRatings.length > 0 && (
-        <div className="py-6 border-b border-white/[0.06]">
+        <div className="py-6">
           <h3 className="text-[11px] font-bold text-[#8a8a9a] uppercase tracking-widest mb-4">
             Room Ratings
           </h3>
@@ -732,65 +800,6 @@ function ContestantPanel({
           </div>
         </div>
       )}
-
-      <div className="flex-1 min-h-8" />
-
-      <div className="sticky bottom-0 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-[#f5b800]/20 py-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm">{getAnimalEmojiForUser(userId)}</span>
-            <span className="text-[11px] font-bold text-[#f5b800] uppercase tracking-widest">
-              Your Rating
-            </span>
-          </div>
-          <span className="text-xs font-bold text-[#8a8a9a]">
-            {currentNickname}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2">
-          {(["music", "performance", "vibes"] as const).map((cat) => (
-            <div key={cat} className="flex flex-col items-center gap-1">
-              <span className="text-base leading-none">
-                {CATEGORY_META[cat].icon}
-              </span>
-              {isActive ? (
-                <Input
-                  type="number"
-                  value={getCurrentScore(cat)}
-                  onChange={(e) => {
-                    void handleRatingChange(cat, e.target.value);
-                  }}
-                  min="1"
-                  max="12"
-                  placeholder="—"
-                  className="h-11 text-center text-base font-extrabold bg-[#12121a] border-white/[0.08] focus-visible:border-[#f5b800]/40 focus-visible:ring-[#f5b800]/20 rounded-xl"
-                  aria-label={`${CATEGORY_META[cat].label} score input`}
-                />
-              ) : (
-                <div className="h-11 flex items-center justify-center w-full rounded-xl bg-[#12121a] border border-white/[0.08]">
-                  <span className="text-base font-extrabold text-[#f0f0f5] tabular-nums">
-                    {getCurrentScore(cat) || "—"}
-                  </span>
-                </div>
-              )}
-              <span className="text-[9px] font-bold text-[#8a8a9a] uppercase tracking-wider">
-                {CATEGORY_META[cat].label}
-              </span>
-            </div>
-          ))}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-base leading-none">⭐</span>
-            <div className="h-11 flex items-center justify-center w-full rounded-xl bg-[#f5b800]/10 border border-[#f5b800]/20">
-              <span className="text-lg font-extrabold text-[#f5b800] tabular-nums">
-                {currentUserTotal}
-              </span>
-            </div>
-            <span className="text-[9px] font-bold text-[#8a8a9a] uppercase tracking-wider">
-              Total
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -1006,7 +1015,6 @@ const ContestantRatingPage: React.FC = () => {
 
       if (!dragState.isHorizontal) return;
 
-      event.preventDefault();
       dragState.isDragging = true;
       dragState.lastX = touch.clientX;
       const minTranslateX = -(contestants.length - 1) * containerWidth;
@@ -1092,7 +1100,7 @@ const ContestantRatingPage: React.FC = () => {
 
   if (!isSwipeEnabled) {
     return (
-      <div className="py-5">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         <ContestantPanel
           contestantId={activeContestantId}
           roomName={roomName}
@@ -1126,13 +1134,13 @@ const ContestantRatingPage: React.FC = () => {
       onTouchMove={handleTouchMove}
       onTouchEnd={finishTouchGesture}
       onTouchCancel={cancelTouchGesture}
-      className="-mx-4 h-full overflow-hidden overscroll-x-contain"
+      className="flex flex-col flex-1 min-h-0 overflow-hidden -mx-4 overscroll-x-contain"
       style={{ touchAction: "pan-y" }}
     >
       <div
         ref={trackRef}
         onTransitionEnd={handleTransitionEnd}
-        className="flex h-full will-change-transform"
+        className="flex flex-1 min-h-0 will-change-transform"
         style={{
           width: containerWidth * contestants.length,
           transform: `translate3d(${translateX}px, 0, 0)`,
@@ -1144,7 +1152,7 @@ const ContestantRatingPage: React.FC = () => {
         {contestants.map((contestant, panelIndex) => (
           <div
             key={contestant.id}
-            className="h-full shrink-0 overflow-y-auto px-4"
+            className="flex flex-col shrink-0 min-h-0 overflow-hidden px-4"
             style={{ width: containerWidth }}
           >
             <ContestantPanel
