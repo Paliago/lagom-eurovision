@@ -112,10 +112,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 			{/* Bottom tab bar — only show inside rooms */}
 			{roomName && (
 				<nav className="sticky bottom-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[env(safe-area-inset-bottom)]">
-					<div className="max-w-lg mx-auto px-6 h-14 flex items-center justify-around">
+					<div className="max-w-lg mx-auto h-14 flex items-stretch">
 						<button
 							onClick={handleNavigateToContestantList}
-							className={`flex flex-col items-center gap-0.5 transition-colors duration-200 active:scale-95 ${
+							className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[56px] transition-colors duration-200 active:scale-95 ${
 								isContestantList ? "text-[#f5b800]" : "text-[#8a8a9a] hover:text-[#f0f0f5]"
 							}`}
 						>
@@ -125,7 +125,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
 						<button
 							onClick={handleViewOverview}
-							className={`flex flex-col items-center gap-0.5 transition-colors duration-200 active:scale-95 ${
+							className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[56px] transition-colors duration-200 active:scale-95 ${
 								isOverview ? "text-[#f5b800]" : "text-[#8a8a9a] hover:text-[#f0f0f5]"
 							}`}
 						>
@@ -135,7 +135,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
 						<button
 							onClick={handleLeaveRoom}
-							className="flex flex-col items-center gap-0.5 text-[#8a8a9a] hover:text-red-400 transition-colors duration-200 active:scale-95"
+							className="flex-1 flex flex-col items-center justify-center gap-1 min-h-[56px] text-[#8a8a9a] hover:text-red-400 transition-colors duration-200 active:scale-95"
 						>
 							<LogOut className="size-5" strokeWidth={1.5} />
 							<span className="text-[10px] font-semibold tracking-wide">Leave</span>
