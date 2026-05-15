@@ -7,7 +7,7 @@
     "build": "tsc -b && vite build",
     "dev": "npm-run-all --parallel dev:frontend dev:backend",
     "dev:backend": "convex dev",
-    "dev:frontend": "vite --open",
+    "dev:frontend": "vite --open --host",
     "lint": "tsc && eslint .  --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "predev": "convex dev --until-success && convex dashboard",
     "preview": "vite preview"
@@ -25,7 +25,8 @@
     "react-dom": "^19.0.0",
     "react-router": "^7.6.0",
     "sst": "3.14.16",
-    "tailwind-merge": "^3.2.0"
+    "tailwind-merge": "^3.2.0",
+    "web-haptics": "^0.0.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
