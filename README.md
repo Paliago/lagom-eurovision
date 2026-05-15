@@ -1,36 +1,131 @@
 # Lagom Eurovision
 
-A real-time Eurovision Song Contest scoring app for watching with friends. Create a room, invite people with a room name, and rate each contestant across three categories: music, performance, and vibes.
+A real-time scoring app for watching Eurovision Song Contest with friends.
 
-Built with Convex, React, Vite, and Tailwind.
+Create a room, share the name, and rate every contestant across three categories — **Music**, **Performance**, and **Vibes**. Scores sync live across devices so you can see exactly how your friends voted and who crowned the winner.
 
-## Get started
+Live at **[lagomeurovision.com](https://lagomeurovision.com)**
+
+## Features
+
+- **Live rooms** — Join a room with a nickname and vote in real-time. No accounts, no passwords.
+- **Three scoring categories** — Music, Performance, and Vibes on a 1–12 scale. Totals update automatically.
+- **Room + global scoreboards** — See your room's average alongside the global average across all rooms.
+- **Per-contestant breakdown** — View how every individual in your room voted, anonymised with emoji avatars.
+- **Swipe navigation** — Mobile-first design with swipeable contestant cards.
+- **Multi-year support** — Browse and score past contests alongside the current year.
+- **Haptic feedback** — Subtle vibration on taps and interactions when supported.
+- **Responsive & dark by default** — Built for phones during the show, looks good on desktop too.
+
+## Tech Stack
+
+| Layer | Tech |
+|---|---|
+| Frontend | React 19 · Vite · TypeScript · Tailwind CSS v4 · shadcn/ui |
+| Router | react-router v7 |
+| Backend | Convex (real-time database + server functions) |
+| Deployment | SST v3 → AWS StaticSite (`eu-north-1`) |
+| Icons | Lucide React |
+| Package Manager | Bun |
+
+## Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh) installed
+- A Convex account and the CLI authenticated (`npx convex login`)
+
+### Install & Run
 
 ```sh
-npm install
-npm run dev
+bun install
+bun run dev
 ```
+
+This starts the Vite frontend and Convex backend in parallel, then opens the Convex dashboard.
+
+| Script | Purpose |
+|---|---|
+| `bun run dev` | Frontend + backend concurrently |
+| `bun run dev:frontend` | Vite dev server only |
+| `bun run dev:backend` | Convex dev server only |
+| `bun run build` | Type-check and production build |
+| `bun run preview` | Preview the production build locally |
+| `bun run lint` | TypeScript + ESLint |
+
+### Environment Variables
+
+`VITE_CONVEX_URL` is required at build/dev time. It is already set in `.env.local` (committed for this repo).
+
+## How It Works
+
+1. **Landing page** — Enter a room name and a nickname. The app creates the room on Convex if it doesn't exist, or joins it if it does.
+2. **Contestant list** — Browse all entries for the selected year. Tap any to open the scoring view.
+3. **Scoring view** — Rate the current act in Music, Performance, and Vibes. Scores save instantly and sync to everyone in the room.
+4. **Overview** — A sortable table showing every contestant's average scores and overall total for the room.
+
+### Data Model
+
+- `rooms` — Stores room name, creation time, and connected users.
+- `ratings` — One document per user + contestant + room combination. Stores the three category scores.
 
 ## Year Support
 
-The app supports multiple Eurovision years. It defaults to the latest year (currently **2026**).
+The app defaults to the latest contest year (currently **2026**). To view or score a previous year, prefix the URL with `/{year}/`:
 
-### Accessing Previous Years
-
-You can join rooms for earlier years by navigating to a year-prefixed sub-path. No UI toggle is exposed; simply change the URL:
-
-| Page | Default (2026) | 2025 |
+| Page | 2026 (default) | 2025 |
 |---|---|---|
 | Contestant List | `/room/:roomName/contestants` | `/2025/room/:roomName/contestants` |
 | Rate Contestant | `/room/:roomName/contestant/:id` | `/2025/room/:roomName/contestant/:id` |
 | Overview | `/room/:roomName/overview` | `/2025/room/:roomName/overview` |
 
-Once on a year-prefixed route, all navigation (prev/next contestant, overview, back buttons) preserves the year automatically.
+Once on a year-prefixed route, all navigation preserves the year automatically.
 
 ### Adding a New Year
 
-To bump the default year (e.g. to 2027), update `src/lib/contestants.ts`:
+Update `src/lib/contestants.ts`:
 
-1. Add a new `contestants2027` array with the contestant data.
-2. Change `DEFAULT_YEAR = 2027`.
-3. Add `2027` to `VALID_YEARS`.
+1. Add a new `contestants{YYYY}` array.
+2. Change `DEFAULT_YEAR = {YYYY}`.
+3. Add `{YYYY}` to `VALID_YEARS`.
+
+No other files need to change — routing, lookups, and navigation adapt automatically.
+
+## Deployment
+
+The app deploys automatically via SST v3 to an AWS StaticSite in `eu-north-1`, served at `lagomeurovision.com`.
+
+```sh
+# Build locally for production
+bun run build
+
+# Deploy with SST
+npx sst deploy
+```
+
+## Project Structure
+
+```
+src/
+  main.tsx          # Convex client init + BrowserRouter
+  App.tsx           # Route definitions (year-prefixed and default)
+  pages/            # LandingPage, ContestantListPage, ContestantRatingPage, OverviewPage
+  lib/              # Contestant data, year parsing, user hooks, haptics
+  components/ui/    # shadcn/ui components
+convex/
+  schema.ts         # Database schema with indexes
+  rooms.ts          # Room join/create logic
+  ratings.ts        # Submit, query, and aggregate ratings
+  _generated/       # Auto-generated Convex types (ignored by ESLint)
+```
+
+## Notes
+
+- **No test runner** is currently configured.
+- **Contestant data is hardcoded** in `src/lib/contestants.ts`, not fetched from an API.
+- **User identity** is tied to `localStorage` (`eurovisionUserId`, `eurovisionNickname`, `eurovisionRoomId`). Returning to the same room with the same nickname restores your previous votes.
+- **Convex `_generated`** is auto-generated by the dev server. Do not edit manually.
+
+## License
+
+MIT
