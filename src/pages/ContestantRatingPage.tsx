@@ -458,7 +458,7 @@ function ContestantPanel({
 					<div className="flex items-center gap-1.5">
 						<span className="text-sm">{getAnimalEmojiForUser(userId)}</span>
 						<span className="text-[11px] font-bold text-[#f5b800] uppercase tracking-widest">
-							{isActive ? "Your Rating" : "Your Rating Preview"}
+							Your Rating
 						</span>
 					</div>
 					<span className="text-xs font-bold text-[#8a8a9a]">{currentNickname}</span>
