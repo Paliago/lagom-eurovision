@@ -59,6 +59,13 @@ type CachedPanelData = {
   roomUsers?: any[];
 };
 
+function cachedPanelDataMatches(
+  a: CachedPanelData | null,
+  b: CachedPanelData,
+): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 function getPanelCacheKey(
   year: number,
   roomId: string | null,
@@ -257,32 +264,39 @@ function ContestantPanel({
       return;
     }
 
-    const nextCachedPanelData = {
-      ...cachedPanelData,
-      userRating:
-        currentUserRatingData === undefined
-          ? cachedPanelData?.userRating
-          : {
-              musicScore: currentUserRatingData?.musicScore ?? null,
-              performanceScore: currentUserRatingData?.performanceScore ?? null,
-              vibesScore: currentUserRatingData?.vibesScore ?? null,
-            },
-      roomRatings: roomRatingsForContestant ?? cachedPanelData?.roomRatings,
-      globalRatings:
-        allGlobalRatingsForContestant ?? cachedPanelData?.globalRatings,
-      roomUsers: roomUsers ?? cachedPanelData?.roomUsers,
-    };
-    setCachedPanelDataState(nextCachedPanelData);
-    setCachedPanelData(
-      year,
-      storedRoomId,
-      userId,
-      contestantId,
-      nextCachedPanelData,
-    );
+    setCachedPanelDataState((previousCachedPanelData) => {
+      const nextCachedPanelData = {
+        ...previousCachedPanelData,
+        userRating:
+          currentUserRatingData === undefined
+            ? previousCachedPanelData?.userRating
+            : {
+                musicScore: currentUserRatingData?.musicScore ?? null,
+                performanceScore: currentUserRatingData?.performanceScore ?? null,
+                vibesScore: currentUserRatingData?.vibesScore ?? null,
+              },
+        roomRatings:
+          roomRatingsForContestant ?? previousCachedPanelData?.roomRatings,
+        globalRatings:
+          allGlobalRatingsForContestant ?? previousCachedPanelData?.globalRatings,
+        roomUsers: roomUsers ?? previousCachedPanelData?.roomUsers,
+      };
+
+      if (cachedPanelDataMatches(previousCachedPanelData, nextCachedPanelData)) {
+        return previousCachedPanelData;
+      }
+
+      setCachedPanelData(
+        year,
+        storedRoomId,
+        userId,
+        contestantId,
+        nextCachedPanelData,
+      );
+      return nextCachedPanelData;
+    });
   }, [
     allGlobalRatingsForContestant,
-    cachedPanelData,
     contestantId,
     currentUserRatingData,
     roomRatingsForContestant,
@@ -825,7 +839,6 @@ const ContestantRatingPage: React.FC = () => {
     activeContestantIndex < contestants.length - 1
       ? (contestants[activeContestantIndex + 1]?.id ?? null)
       : null;
-  const visibleContestants = contestants;
   const activePanelIndex = activeContestantIndex;
 
   useEffect(() => {
@@ -911,7 +924,7 @@ const ContestantRatingPage: React.FC = () => {
 
       const clampedPanelIndex = Math.max(
         0,
-        Math.min(visibleContestants.length - 1, targetPanelIndex),
+        Math.min(contestants.length - 1, targetPanelIndex),
       );
       const targetContestantIndex = clampedPanelIndex;
       pendingContestantIndexRef.current =
@@ -931,7 +944,7 @@ const ContestantRatingPage: React.FC = () => {
       activeContestantIndex,
       completePendingSnap,
       containerWidth,
-      visibleContestants.length,
+      contestants.length,
     ],
   );
 
@@ -996,7 +1009,7 @@ const ContestantRatingPage: React.FC = () => {
       event.preventDefault();
       dragState.isDragging = true;
       dragState.lastX = touch.clientX;
-      const minTranslateX = -(visibleContestants.length - 1) * containerWidth;
+      const minTranslateX = -(contestants.length - 1) * containerWidth;
       const maxTranslateX = 0;
       const nextTranslateX = Math.max(
         minTranslateX,
@@ -1004,7 +1017,7 @@ const ContestantRatingPage: React.FC = () => {
       );
       setTranslateX(nextTranslateX);
     },
-    [containerWidth, getActiveTouch, visibleContestants.length],
+    [containerWidth, contestants.length, getActiveTouch],
   );
 
   const finishTouchGesture = useCallback(() => {
@@ -1121,14 +1134,14 @@ const ContestantRatingPage: React.FC = () => {
         onTransitionEnd={handleTransitionEnd}
         className="flex h-full will-change-transform"
         style={{
-          width: containerWidth * visibleContestants.length,
+          width: containerWidth * contestants.length,
           transform: `translate3d(${translateX}px, 0, 0)`,
           transition: isAnimating
             ? "transform 260ms cubic-bezier(0.22, 1, 0.36, 1)"
             : "none",
         }}
       >
-        {visibleContestants.map((contestant, panelIndex) => (
+        {contestants.map((contestant, panelIndex) => (
           <div
             key={contestant.id}
             className="h-full shrink-0 overflow-y-auto px-4"
