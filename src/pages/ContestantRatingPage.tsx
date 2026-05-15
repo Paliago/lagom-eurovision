@@ -4,15 +4,7 @@ import { useParams, useNavigate, Link } from "react-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-	Card,
-	CardHeader,
-	CardTitle,
-	CardContent,
-	CardDescription,
-} from "@/components/ui/card";
 import {
 	type Contestant,
 	getContestantById,
@@ -25,8 +17,9 @@ import { useAppYear, buildRoomPath } from "@/lib/year";
 import { getAnimalEmojiForUser } from "@/lib/emoji";
 import { getBackgroundColorForRater } from "@/lib/colors";
 import { useEurovisionUser } from "@/lib/hooks";
+import { useHaptics } from "@/lib/haptics";
+import { ChevronLeft, ChevronRight, TrendingUp, Users, Globe } from "lucide-react";
 
-// Derive initial score from rating data, treating null/undefined as empty string
 function deriveInitialScore(
 	data: { musicScore?: number | null; performanceScore?: number | null; vibesScore?: number | null } | null | undefined,
 	key: "musicScore" | "performanceScore" | "vibesScore",
@@ -35,6 +28,12 @@ function deriveInitialScore(
 	const val = data[key];
 	return typeof val === "number" ? val : "";
 }
+
+const CATEGORY_META = {
+	music: { label: "Music", icon: "🎵", color: "#f5b800" },
+	performance: { label: "Performance", icon: "💃", color: "#ff2d78" },
+	vibes: { label: "Vibes", icon: "🧑‍🎤", color: "#22d3ee" },
+} as const;
 
 const ContestantRatingPage: React.FC = () => {
 	const { roomName, contestantId } = useParams<{
@@ -46,6 +45,7 @@ const ContestantRatingPage: React.FC = () => {
 	const contestants = getContestantsByYear(year);
 	const { userId, nickname: storedNickname, roomId: storedRoomId } = useEurovisionUser();
 	const currentNickname = storedNickname || "User";
+	const { trigger } = useHaptics();
 
 	const contestant: Contestant | null | undefined = contestantId
 		? getContestantById(contestantId, year)
@@ -80,7 +80,6 @@ const ContestantRatingPage: React.FC = () => {
 			: "skip",
 	);
 
-	// Use key-based reset: state resets automatically when contestantId changes
 	const [musicScore, setMusicScore] = useState<number | string>(() =>
 		deriveInitialScore(currentUserRatingData, "musicScore"),
 	);
@@ -91,9 +90,6 @@ const ContestantRatingPage: React.FC = () => {
 		deriveInitialScore(currentUserRatingData, "vibesScore"),
 	);
 
-	// Minimal one-time sync: only initialize from server data when contestant changes
-	// and currentUserRatingData has finished loading. This avoids overwriting user edits
-	// on re-renders or data refetches.
 	const initializedContestantRef = useRef<string | null>(null);
 	useEffect(() => {
 		if (
@@ -109,69 +105,33 @@ const ContestantRatingPage: React.FC = () => {
 	}, [contestantId, currentUserRatingData]);
 
 	const roomAverages = useMemo(() => {
-		if (!roomRatingsForContestant) {
-			return {
-				music: null,
-				performance: null,
-				vibes: null,
-				total: null,
-				count: 0,
-			};
-		}
-		if (roomRatingsForContestant.length === 0) {
-			return {
-				music: null,
-				performance: null,
-				vibes: null,
-				total: null,
-				count: 0,
-			};
+		if (!roomRatingsForContestant || roomRatingsForContestant.length === 0) {
+			return { music: null, performance: null, vibes: null, total: null, count: 0 };
 		}
 
-		let sumMusic = 0;
-		let countMusic = 0;
-		let sumPerformance = 0;
-		let countPerformance = 0;
-		let sumVibes = 0;
-		let countVibes = 0;
+		let sumMusic = 0, countMusic = 0;
+		let sumPerformance = 0, countPerformance = 0;
+		let sumVibes = 0, countVibes = 0;
 		const uniqueRaters = new Set<string>();
 
 		for (const rating of roomRatingsForContestant) {
 			uniqueRaters.add(rating.userId);
-			if (typeof rating.musicScore === "number") {
-				sumMusic += rating.musicScore;
-				countMusic++;
-			}
-			if (typeof rating.performanceScore === "number") {
-				sumPerformance += rating.performanceScore;
-				countPerformance++;
-			}
-			if (typeof rating.vibesScore === "number") {
-				sumVibes += rating.vibesScore;
-				countVibes++;
-			}
+			if (typeof rating.musicScore === "number") { sumMusic += rating.musicScore; countMusic++; }
+			if (typeof rating.performanceScore === "number") { sumPerformance += rating.performanceScore; countPerformance++; }
+			if (typeof rating.vibesScore === "number") { sumVibes += rating.vibesScore; countVibes++; }
 		}
 
 		const avgMusic = countMusic > 0 ? sumMusic / countMusic : null;
-		const avgPerformance =
-			countPerformance > 0 ? sumPerformance / countPerformance : null;
+		const avgPerformance = countPerformance > 0 ? sumPerformance / countPerformance : null;
 		const avgVibes = countVibes > 0 ? sumVibes / countVibes : null;
-
-		const validCategoryAverages = [avgMusic, avgPerformance, avgVibes].filter(
-			(avg) => avg !== null,
-		);
-		const totalAvg =
-			validCategoryAverages.length > 0
-				? validCategoryAverages.reduce((acc, curr) => acc + (curr ?? 0), 0) /
-					validCategoryAverages.length
-				: null;
+		const validCategoryAverages = [avgMusic, avgPerformance, avgVibes].filter((avg) => avg !== null);
+		const totalAvg = validCategoryAverages.length > 0
+			? validCategoryAverages.reduce((acc, curr) => acc + (curr ?? 0), 0) / validCategoryAverages.length
+			: null;
 
 		return {
 			music: avgMusic !== null ? Number.parseFloat(avgMusic.toFixed(1)) : null,
-			performance:
-				avgPerformance !== null
-					? Number.parseFloat(avgPerformance.toFixed(1))
-					: null,
+			performance: avgPerformance !== null ? Number.parseFloat(avgPerformance.toFixed(1)) : null,
 			vibes: avgVibes !== null ? Number.parseFloat(avgVibes.toFixed(1)) : null,
 			total: totalAvg !== null ? Number.parseFloat(totalAvg.toFixed(1)) : null,
 			count: uniqueRaters.size,
@@ -180,15 +140,8 @@ const ContestantRatingPage: React.FC = () => {
 
 	const globalAverages = useMemo(() => {
 		if (!allGlobalRatingsForContestant) {
-			return {
-				music: null,
-				performance: null,
-				vibes: null,
-				total: null,
-				count: 0,
-			};
+			return { music: null, performance: null, vibes: null, total: null, count: 0 };
 		}
-
 		return {
 			music: allGlobalRatingsForContestant.avgMusic,
 			performance: allGlobalRatingsForContestant.avgPerformance,
@@ -207,18 +160,13 @@ const ContestantRatingPage: React.FC = () => {
 				const existingRating = roomRatingsForContestant.find(
 					(r) => r.userId === roomUser.userId,
 				);
-
 				const m = existingRating?.musicScore ?? null;
 				const p = existingRating?.performanceScore ?? null;
 				const v = existingRating?.vibesScore ?? null;
-
-				let individualTotal = null;
 				const scoresProvided = [m, p, v].filter((s) => s !== null);
-				if (scoresProvided.length > 0) {
-					individualTotal =
-						scoresProvided.reduce((acc, curr) => acc + (curr ?? 0), 0) /
-						scoresProvided.length;
-				}
+				const individualTotal = scoresProvided.length > 0
+					? scoresProvided.reduce((acc, curr) => acc + (curr ?? 0), 0) / scoresProvided.length
+					: null;
 
 				return {
 					raterId: roomUser.userId,
@@ -226,10 +174,7 @@ const ContestantRatingPage: React.FC = () => {
 					music: m,
 					performance: p,
 					vibes: v,
-					total:
-						individualTotal !== null
-							? Number.parseFloat(individualTotal.toFixed(1))
-							: null,
+					total: individualTotal !== null ? Number.parseFloat(individualTotal.toFixed(1)) : null,
 				};
 			});
 	}, [roomUsers, roomRatingsForContestant, userId]);
@@ -255,18 +200,13 @@ const ContestantRatingPage: React.FC = () => {
 			}
 
 			switch (category) {
-				case "music":
-					setMusicScore(scoreToSet);
-					break;
-				case "performance":
-					setPerformanceScore(scoreToSet);
-					break;
-				case "vibes":
-					setVibesScore(scoreToSet);
-					break;
+				case "music": setMusicScore(scoreToSet); break;
+				case "performance": setPerformanceScore(scoreToSet); break;
+				case "vibes": setVibesScore(scoreToSet); break;
 			}
 
 			if (scoreToSubmit !== null && storedRoomId && contestantId && userId) {
+				trigger("selection");
 				try {
 					await submitRatingMutation({
 						roomId: storedRoomId as Id<"rooms">,
@@ -278,29 +218,21 @@ const ContestantRatingPage: React.FC = () => {
 					});
 				} catch (error) {
 					console.error("Failed to submit rating:", error);
-					alert(
-						`Failed to submit rating: ${
-							error instanceof Error ? error.message : "Unknown error"
-						}`,
-					);
+					trigger("error");
 				}
 			}
 		},
-		[storedRoomId, contestantId, userId, submitRatingMutation, currentNickname],
+		[storedRoomId, contestantId, userId, submitRatingMutation, currentNickname, trigger],
 	);
 
 	const currentUserTotal = useMemo(() => {
 		const scores = [musicScore, performanceScore, vibesScore];
 		const validScores = scores.filter((s) => typeof s === "number");
-
 		if (validScores.length === 0) {
-			if (musicScore === "" && performanceScore === "" && vibesScore === "")
-				return "-";
+			if (musicScore === "" && performanceScore === "" && vibesScore === "") return "—";
 			return "0";
 		}
-		return (
-			validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length
-		).toFixed(1);
+		return (validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length).toFixed(1);
 	}, [musicScore, performanceScore, vibesScore]);
 
 	const navigateToContestant = useCallback(
@@ -309,309 +241,223 @@ const ContestantRatingPage: React.FC = () => {
 				setMusicScore("");
 				setPerformanceScore("");
 				setVibesScore("");
-				void navigate(
-					buildRoomPath(
-						year,
-						roomName,
-						`/contestant/${newContestantId}`,
-					),
-				);
+				void navigate(buildRoomPath(year, roomName, `/contestant/${newContestantId}`));
 			}
 		},
 		[navigate, roomName, year],
 	);
 
-	const handleNext = useCallback(
-		() => navigateToContestant(contestantId ? getNextContestantId(contestantId, year) : null),
-		[navigateToContestant, contestantId, year],
-	);
-	const handlePrevious = useCallback(
-		() => navigateToContestant(contestantId ? getPreviousContestantId(contestantId, year) : null),
-		[navigateToContestant, contestantId, year],
-	);
+	const handleNext = useCallback(() => {
+		trigger("light");
+		navigateToContestant(contestantId ? getNextContestantId(contestantId, year) : null);
+	}, [navigateToContestant, contestantId, year, trigger]);
+
+	const handlePrevious = useCallback(() => {
+		trigger("light");
+		navigateToContestant(contestantId ? getPreviousContestantId(contestantId, year) : null);
+	}, [navigateToContestant, contestantId, year, trigger]);
 
 	if (!contestant || !contestantId) {
 		return (
-			<div className="p-4 text-red-500">
-				Contestant not found.{" "}
-				<Button variant="link" asChild>
-					<Link
-						to={
-							roomName
-								? buildRoomPath(year, roomName, "/contestants")
-								: "/"
-						}
-					>
-						Back to List
-					</Link>
-				</Button>
+			<div className="p-4 text-center">
+				<p className="text-red-400 font-medium mb-4">Contestant not found</p>
+				<Link
+					to={roomName ? buildRoomPath(year, roomName, "/contestants") : "/"}
+					className="text-[#f5b800] font-semibold hover:underline"
+				>
+					Back to List
+				</Link>
 			</div>
 		);
 	}
 	if (!userId) {
 		return (
-			<div className="p-4 text-red-500">
-				User not identified. Please{" "}
-				<Button variant="link" asChild>
-					<Link to="/">re-join the room</Link>
-				</Button>
-				.
+			<div className="p-4 text-center">
+				<p className="text-red-400 font-medium mb-4">User not identified</p>
+				<Link to="/" className="text-[#f5b800] font-semibold hover:underline">
+					Re-join the room
+				</Link>
 			</div>
 		);
 	}
 	if (!storedRoomId) {
 		return (
-			<div className="p-4 text-red-500">
-				Room ID not found. Please{" "}
-				<Button variant="link" asChild>
-					<Link to="/">re-join the room</Link>
-				</Button>
-				.
+			<div className="p-4 text-center">
+				<p className="text-red-400 font-medium mb-4">Room ID not found</p>
+				<Link to="/" className="text-[#f5b800] font-semibold hover:underline">
+					Re-join the room
+				</Link>
 			</div>
 		);
 	}
 
+	const ScoreBlock = ({
+		label,
+		value,
+		color,
+	}: {
+		label: string;
+		value: string | number | null;
+		color?: string;
+	}) => (
+		<div className="flex flex-col items-center gap-1">
+			<span className="text-[10px] font-bold text-[#8a8a9a] uppercase tracking-wider">{label}</span>
+			<span
+				className="text-lg font-extrabold tabular-nums"
+				style={{ color: color ?? "#f0f0f5" }}
+			>
+				{value ?? "—"}
+			</span>
+		</div>
+	);
+
 	return (
-		<div className="flex flex-col items-center">
-			<Card className="w-full max-w-md bg-white/90 shadow-xl py-4">
-				<CardHeader className="px-4">
-					<div className="text-center">
-						<p className="text-sm text-purple-600 font-medium mb-2">
-							{contestantOrder} of {totalContestants}
-						</p>
+		<div className="space-y-5 pb-4">
+			{/* Contestant header card */}
+			<div className="bg-[#1a1a26] rounded-2xl border border-white/[0.08] p-5 text-center shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
+				<p className="text-[11px] font-bold text-[#8a8a9a] uppercase tracking-widest mb-3">
+					{contestantOrder} of {totalContestants}
+				</p>
 
-						<div className="flex justify-between items-center mb-2">
-							<Button
-								onClick={handlePrevious}
-								variant="ghost"
-								size="icon"
-								className="text-yellow-400 hover:text-yellow-500 touch-manipulation"
-							>
-								<span className="text-3xl">👈</span>
-							</Button>
+				<div className="flex items-center justify-between mb-4">
+					<button
+						onClick={handlePrevious}
+						className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#12121a] border border-white/[0.08] text-[#f5b800] transition-all duration-200 hover:bg-[#222233] active:scale-95"
+						aria-label="Previous contestant"
+					>
+						<ChevronLeft className="size-5" />
+					</button>
 
-							{contestant.flagUrl ? (
-								<img
-									src={contestant.flagUrl}
-									alt={`Flag of ${contestant.country}`}
-									className="w-24 h-16 object-contain rounded border border-gray-200"
-								/>
-							) : (
-								<div className="w-24 h-16 bg-gray-300 flex items-center justify-center text-gray-500 rounded">
-									FLAG
-								</div>
-							)}
-							<Button
-								onClick={handleNext}
-								variant="ghost"
-								size="icon"
-								className="text-yellow-400 hover:text-yellow-500 touch-manipulation"
-							>
-								<span className="text-3xl">👉</span>
-							</Button>
+					{contestant.flagUrl ? (
+					<img
+						src={contestant.flagUrl}
+						alt={`Flag of ${contestant.country}`}
+						className="w-28 h-16 object-cover rounded-lg shadow-lg border border-white/[0.08]"
+					/>
+					) : (
+						<div className="w-28 h-16 bg-[#12121a] flex items-center justify-center text-[#8a8a9a] rounded-lg border border-white/[0.08]">
+							FLAG
 						</div>
-					</div>
-					<div className="text-center">
-						<CardTitle className="text-2xl font-bold text-gray-800">
-							{contestant.name}
-						</CardTitle>
-						<CardDescription className="text-lg text-gray-600">
-							{contestant.song} ({contestant.country})
-						</CardDescription>
-					</div>
-				</CardHeader>
+					)}
 
-				<CardContent className="px-4 space-y-3">
-					<div className="p-4 bg-purple-400 rounded-lg shadow space-y-2">
-						<div className="flex justify-evenly items-center space-x-8">
-							<div className="text-center text-gray-700">
-								<span>🎵</span>
-							</div>
-							<div className="text-center text-gray-700">
-								<span>💃</span>
-							</div>
-							<div className="text-center text-gray-700">
-								<span>🧑‍🎤</span>
-							</div>
-							<div className="text-center text-gray-700">
-								<span>🟰</span>
-							</div>
-						</div>
-						<div className="flex items-center space-x-2 mb-2">
-							<span className="text-xl">🌍</span>
-							<h4 className="text-md font-semibold text-white">
-								Global Average ({globalAverages.count} ratings)
-							</h4>
-						</div>
-						<div className="grid grid-cols-4 gap-2 text-sm items-center">
-							<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-								<span className="font-medium text-gray-700">
-									{globalAverages.music ?? "-"}
-								</span>
-							</div>
-							<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-								<span className="font-medium text-gray-700">
-									{globalAverages.performance ?? "-"}
-								</span>
-							</div>
-							<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-								<span className="font-medium text-gray-700">
-									{globalAverages.vibes ?? "-"}
-								</span>
-							</div>
-							<div className="flex flex-col items-center p-1 bg-blue-100 rounded text-blue-700">
-								{globalAverages.total ?? "-"}
-							</div>
-						</div>
+					<button
+						onClick={handleNext}
+						className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#12121a] border border-white/[0.08] text-[#f5b800] transition-all duration-200 hover:bg-[#222233] active:scale-95"
+						aria-label="Next contestant"
+					>
+						<ChevronRight className="size-5" />
+					</button>
+				</div>
 
-						<div className="flex items-center space-x-2 mt-3 mb-2">
-							<span className="text-xl">🏠</span>
-							<h4 className="text-md font-semibold text-white">
-								Room Average ({roomAverages.count} ratings)
-							</h4>
-						</div>
-						<div className="grid grid-cols-4 gap-2 text-sm items-center">
-							<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-								<span className="font-medium text-gray-700">
-									{roomAverages.music ?? "-"}
-								</span>
-							</div>
-							<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-								<span className="font-medium text-gray-700">
-									{roomAverages.performance ?? "-"}
-								</span>
-							</div>
-							<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-								<span className="font-medium text-gray-700">
-									{roomAverages.vibes ?? "-"}
-								</span>
-							</div>
-							<div className="flex flex-col items-center p-1 bg-blue-100 rounded text-blue-700">
-								{roomAverages.total ?? "-"}
-							</div>
-						</div>
-					</div>
+				<h2 className="text-2xl font-extrabold tracking-tight text-[#f0f0f5] mb-1">
+					{contestant.name}
+				</h2>
+				<p className="text-sm font-medium text-[#8a8a9a]">
+					{contestant.song} · {contestant.country}
+				</p>
+			</div>
 
-					<div className="p-4 bg-blue-400 rounded-lg shadow space-y-2">
-						<div className="flex items-center space-x-2 mb-2">
-							<span className="text-xl">
-								{userId ? getAnimalEmojiForUser(userId) : "🐾"}
+			{/* Global averages */}
+			<div className="bg-[#1a1a26] rounded-2xl border border-white/[0.08] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
+				<div className="flex items-center gap-2 mb-4">
+					<Globe className="size-4 text-[#8a8a9a]" />
+					<h3 className="text-xs font-bold text-[#8a8a9a] uppercase tracking-widest">
+						Global Average ({globalAverages.count} ratings)
+					</h3>
+				</div>
+				<div className="grid grid-cols-4 gap-2">
+					<ScoreBlock label="Music" value={globalAverages.music} color={CATEGORY_META.music.color} />
+					<ScoreBlock label="Perf" value={globalAverages.performance} color={CATEGORY_META.performance.color} />
+					<ScoreBlock label="Vibes" value={globalAverages.vibes} color={CATEGORY_META.vibes.color} />
+					<ScoreBlock label="Total" value={globalAverages.total} color="#f5b800" />
+				</div>
+			</div>
+
+			{/* Room averages */}
+			<div className="bg-[#1a1a26] rounded-2xl border border-white/[0.08] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
+				<div className="flex items-center gap-2 mb-4">
+					<Users className="size-4 text-[#8a8a9a]" />
+					<h3 className="text-xs font-bold text-[#8a8a9a] uppercase tracking-widest">
+						Room Average ({roomAverages.count} ratings)
+					</h3>
+				</div>
+				<div className="grid grid-cols-4 gap-2">
+					<ScoreBlock label="Music" value={roomAverages.music} color={CATEGORY_META.music.color} />
+					<ScoreBlock label="Perf" value={roomAverages.performance} color={CATEGORY_META.performance.color} />
+					<ScoreBlock label="Vibes" value={roomAverages.vibes} color={CATEGORY_META.vibes.color} />
+					<ScoreBlock label="Total" value={roomAverages.total} color="#f5b800" />
+				</div>
+			</div>
+
+			{/* Your rating */}
+			<div className="bg-[#1a1a26] rounded-2xl border border-[#f5b800]/20 p-5 shadow-[0_0_40px_rgba(245,184,0,0.08)]">
+				<div className="flex items-center gap-2 mb-4">
+					<span className="text-lg">{userId ? getAnimalEmojiForUser(userId) : "🐾"}</span>
+					<h3 className="text-xs font-bold text-[#f5b800] uppercase tracking-widest">
+						Your Rating
+					</h3>
+				</div>
+
+				<div className="grid grid-cols-4 gap-3">
+					{( ["music", "performance", "vibes"] as const ).map((cat) => (
+						<div key={cat} className="flex flex-col items-center gap-1.5">
+							<span className="text-lg">{CATEGORY_META[cat].icon}</span>
+							<Input
+								type="number"
+								value={cat === "music" ? musicScore : cat === "performance" ? performanceScore : vibesScore}
+								onChange={(e) => {
+									void handleRatingChange(cat, e.target.value);
+								}}
+								min="1"
+								max="12"
+								placeholder="—"
+								className="h-12 text-center text-lg font-extrabold bg-[#12121a] border-white/[0.08] focus-visible:border-[#f5b800]/40 focus-visible:ring-[#f5b800]/20 rounded-xl"
+								aria-label={`${CATEGORY_META[cat].label} score input`}
+							/>
+							<span className="text-[10px] font-bold text-[#8a8a9a] uppercase tracking-wider">
+								{CATEGORY_META[cat].label}
 							</span>
-							<h4 className="text-md font-semibold text-white">
-								{currentNickname}
-							</h4>
 						</div>
-						<div className="flex justify-evenly items-center space-x-8 mb-2">
-							<div className="text-center text-gray-700">
-								<span>🎵</span>
-							</div>
-							<div className="text-center text-gray-700">
-								<span>💃</span>
-							</div>
-							<div className="text-center text-gray-700">
-								<span>🧑‍🎤</span>
-							</div>
-							<div className="text-center text-gray-700">
-								<span>🟰</span>
-							</div>
-						</div>
-						<div className="grid grid-cols-4 gap-2 items-center">
-							<Input
-								type="number"
-								value={musicScore}
-								onChange={(e) => {
-									void handleRatingChange("music", e.target.value);
-								}}
-								min="1"
-								max="12"
-								placeholder="-"
-								className="text-center bg-white rounded"
-								aria-label="Music score input"
-							/>
-							<Input
-								type="number"
-								value={performanceScore}
-								onChange={(e) => {
-									void handleRatingChange("performance", e.target.value);
-								}}
-								min="1"
-								max="12"
-								placeholder="-"
-								className="text-center bg-white rounded"
-								aria-label="Performance score input"
-							/>
-							<Input
-								type="number"
-								value={vibesScore}
-								onChange={(e) => {
-									void handleRatingChange("vibes", e.target.value);
-								}}
-								min="1"
-								max="12"
-								placeholder="-"
-								className="text-center bg-white rounded"
-								aria-label="Vibes score input"
-							/>
-							<div className="text-center font-bold text-white text-lg bg-blue-500/50 py-1.5 rounded">
+					))}
+					<div className="flex flex-col items-center gap-1.5">
+						<TrendingUp className="size-5 text-[#8a8a9a]" />
+						<div className="h-12 flex items-center justify-center w-full rounded-xl bg-[#f5b800]/10 border border-[#f5b800]/20">
+							<span className="text-xl font-extrabold text-[#f5b800] tabular-nums">
 								{currentUserTotal}
-							</div>
+							</span>
 						</div>
+						<span className="text-[10px] font-bold text-[#8a8a9a] uppercase tracking-wider">Total</span>
 					</div>
+				</div>
+			</div>
 
+			{/* Other raters */}
+			{otherIndividualRatings.length > 0 && (
+				<div className="space-y-3">
+					<h3 className="text-xs font-bold text-[#8a8a9a] uppercase tracking-widest px-1">
+						Room Ratings
+					</h3>
 					{otherIndividualRatings.map((rater) => (
 						<div
 							key={rater.raterId}
-							className={`p-4 ${getBackgroundColorForRater(
+							className={`rounded-2xl border border-white/[0.06] p-4 ${getBackgroundColorForRater(
 								rater.raterId,
-							)} rounded-lg shadow space-y-2`}
+							)}`}
 						>
-							<div className="flex items-center space-x-2 mb-2">
-								<span className="text-xl">
-									{getAnimalEmojiForUser(rater.raterId)}
-								</span>
-								<h4 className="text-md font-semibold text-white">
-									{rater.nickname}
-								</h4>
+							<div className="flex items-center gap-2 mb-3">
+								<span className="text-base">{getAnimalEmojiForUser(rater.raterId)}</span>
+								<span className="text-sm font-bold text-[#f0f0f5]">{rater.nickname}</span>
 							</div>
-							<div className="grid grid-cols-4 gap-2 text-sm items-center">
-								<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-									<span className="font-medium text-gray-700">
-										{rater.music ?? "-"}
-									</span>
-								</div>
-								<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-									<span className="font-medium text-gray-700">
-										{rater.performance ?? "-"}
-									</span>
-								</div>
-								<div className="flex flex-col items-center p-1 bg-gray-200 rounded">
-									<span className="font-medium text-gray-700">
-										{rater.vibes ?? "-"}
-									</span>
-								</div>
-								<div className="flex flex-col items-center p-1 bg-blue-100 rounded text-blue-700">
-									{rater.total ?? "-"}
-								</div>
+							<div className="grid grid-cols-4 gap-2">
+								<ScoreBlock label="Music" value={rater.music} />
+								<ScoreBlock label="Perf" value={rater.performance} />
+								<ScoreBlock label="Vibes" value={rater.vibes} />
+								<ScoreBlock label="Total" value={rater.total} color="#f5b800" />
 							</div>
 						</div>
 					))}
-				</CardContent>
-
-				<div className="px-4">
-					<Button
-						onClick={() =>
-							void navigate(
-								roomName
-									? buildRoomPath(year, roomName, "/contestants")
-									: "/",
-							)
-						}
-						className="w-full bg-purple-500 hover:bg-purple-600 text-white touch-manipulation"
-					>
-						Back to List
-					</Button>
 				</div>
-			</Card>
+			)}
 		</div>
 	);
 };

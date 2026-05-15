@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, Link } from "react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -8,17 +8,9 @@ import {
   getContestantById,
   getContestantsByYear,
 } from "@/lib/contestants";
-import { useAppYear, buildRoomPath } from "@/lib/year";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
+import { useAppYear } from "@/lib/year";
+import { useEurovisionUser } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
 import {
   type ColumnDef,
   type SortingState,
@@ -29,8 +21,7 @@ import {
   type Column,
   type Row,
 } from "@tanstack/react-table";
-import { cn } from "@/lib/utils";
-import { useEurovisionUser } from "@/lib/hooks";
+import { Globe, Users, ChevronUp, ChevronDown } from "lucide-react";
 
 interface OverviewData {
   contestantId: string;
@@ -43,7 +34,7 @@ interface OverviewData {
 
 function formatScore(value: number | null | undefined): string {
   if (value === null || value === undefined) {
-    return "N/A";
+    return "—";
   }
   const formatted = value.toFixed(1);
   return formatted.endsWith(".0")
@@ -51,73 +42,26 @@ function formatScore(value: number | null | undefined): string {
     : formatted;
 }
 
-function OrderHeader({ column }: { column: Column<OverviewData, unknown> }) {
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="p-1 hover:bg-gray-200/70 rounded-md w-full flex justify-center"
-    >
-      <div className="text-lg">🔢</div>
-    </Button>
-  );
-}
-
-function FlagHeader({ column }: { column: Column<OverviewData, unknown> }) {
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="p-1 hover:bg-gray-200/70 rounded-md w-full flex justify-center"
-    >
-      <div className="text-lg">🏳️</div>
-    </Button>
-  );
-}
-
-function ScoreHeader({
+function SortableHeader({
   column,
-  icon,
+  children,
 }: {
   column: Column<OverviewData, unknown>;
-  icon: string;
+  children: React.ReactNode;
 }) {
+  const isSorted = column.getIsSorted();
   return (
-    <Button
-      variant="ghost"
+    <button
       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="p-1 hover:bg-gray-200/70 rounded-md w-full flex justify-center"
+      className="flex items-center justify-center gap-0.5 w-full py-2 text-[10px] font-bold text-[#8a8a9a] uppercase tracking-wider hover:text-[#f0f0f5] transition-colors"
     >
-      <div className="text-lg">{icon}</div>
-    </Button>
+      {children}
+      {isSorted === "asc" && <ChevronUp className="size-3 text-[#f5b800]" />}
+      {isSorted === "desc" && <ChevronDown className="size-3 text-[#f5b800]" />}
+    </button>
   );
 }
 
-function TotalHeader({ column }: { column: Column<OverviewData, unknown> }) {
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="p-1 hover:bg-gray-200/70 rounded-md w-full flex justify-center"
-    >
-      <div className="text-lg">🟰</div>
-    </Button>
-  );
-}
-
-function NumRatersHeader({ column }: { column: Column<OverviewData, unknown> }) {
-  return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      className="p-1 hover:bg-gray-200/70 rounded-md w-full flex justify-center"
-    >
-      <div className="text-lg">👥</div>
-    </Button>
-  );
-}
-
-// Contestant lookup for columns — called at render time, not during table init
 function getOrderValue(contestantId: string, year: number): number {
   const contestants = getContestantsByYear(year);
   const index = contestants.findIndex((c: Contestant) => c.id === contestantId);
@@ -126,34 +70,10 @@ function getOrderValue(contestantId: string, year: number): number {
 
 function getCellClass(columnId: string, cellValue: unknown): string {
   return cn(
-    "px-2 py-3 border-b border-gray-300 text-base text-center",
-    columnId === "order" && "text-gray-800 font-medium",
-    columnId === "totalAvg" && "font-bold text-green-700",
-    typeof cellValue === "number" && "font-bold",
-  );
-}
-
-function getGlobalCellClass(columnId: string, cellValue: unknown): string {
-  return cn(
-    "px-2 py-3 border-b border-gray-300 text-base text-center",
-    columnId === "order" && "text-gray-800 font-medium",
-    columnId === "totalAvg" && "font-bold text-blue-700",
-    typeof cellValue === "number" && "font-bold",
-  );
-}
-
-function getHeadClass(columnId: string): string {
-  return cn(
-    "px-2 py-3 border-b border-gray-300 text-gray-800 font-semibold text-center",
-    columnId === "order"
-      ? "w-[8%]"
-      : columnId === "contestantId"
-        ? "w-[12%]"
-        : columnId === "totalAvg"
-          ? "w-[12%]"
-          : columnId === "numRaters"
-            ? "w-[10%]"
-            : "w-[13%]",
+    "px-1 py-2.5 text-sm text-center border-b border-white/[0.04]",
+    columnId === "order" && "text-[#8a8a9a] font-semibold",
+    columnId === "totalAvg" && "font-extrabold text-[#f5b800]",
+    typeof cellValue === "number" && "font-bold text-[#f0f0f5]"
   );
 }
 
@@ -162,19 +82,19 @@ function createColumns(year: number): ColumnDef<OverviewData>[] {
     {
       id: "order",
       header: ({ column }: { column: Column<OverviewData, unknown> }) => (
-        <OrderHeader column={column} />
+        <SortableHeader column={column}>#</SortableHeader>
       ),
       accessorFn: (row: OverviewData) => getOrderValue(row.contestantId, year),
       cell: (info) => {
         const orderValue = info.getValue<number>();
-        return orderValue === Number.MAX_SAFE_INTEGER ? "N/A" : orderValue;
+        return orderValue === Number.MAX_SAFE_INTEGER ? "—" : orderValue;
       },
       sortingFn: "alphanumeric",
     },
     {
       accessorKey: "contestantId",
       header: ({ column }: { column: Column<OverviewData, unknown> }) => (
-        <FlagHeader column={column} />
+        <SortableHeader column={column}>Flag</SortableHeader>
       ),
       cell: ({ row }: { row: Row<OverviewData> }) => {
         const contestant = getContestantById(row.original.contestantId, year);
@@ -182,10 +102,10 @@ function createColumns(year: number): ColumnDef<OverviewData>[] {
           <img
             src={contestant.flagUrl}
             alt={`${contestant.country} flag`}
-            className="w-8 h-auto mx-auto"
+            className="w-7 h-auto mx-auto rounded shadow-sm"
           />
         ) : (
-          row.original.contestantId
+          <span className="text-[#8a8a9a] text-xs">—</span>
         );
       },
       sortingFn: (rowA, rowB, columnId) => {
@@ -199,47 +119,54 @@ function createColumns(year: number): ColumnDef<OverviewData>[] {
     {
       accessorKey: "avgMusic",
       header: ({ column }: { column: Column<OverviewData, unknown> }) => (
-        <ScoreHeader column={column} icon="🎵" />
+        <SortableHeader column={column}>🎵</SortableHeader>
       ),
-      cell: ({ row }: { row: Row<OverviewData> }) => formatScore(row.original.avgMusic),
+      cell: ({ row }: { row: Row<OverviewData> }) => (
+        <span className="text-[#f5b800]">{formatScore(row.original.avgMusic)}</span>
+      ),
     },
     {
       accessorKey: "avgPerformance",
       header: ({ column }: { column: Column<OverviewData, unknown> }) => (
-        <ScoreHeader column={column} icon="💃" />
+        <SortableHeader column={column}>💃</SortableHeader>
       ),
-      cell: ({ row }: { row: Row<OverviewData> }) => formatScore(row.original.avgPerformance),
+      cell: ({ row }: { row: Row<OverviewData> }) => (
+        <span className="text-[#ff2d78]">{formatScore(row.original.avgPerformance)}</span>
+      ),
     },
     {
       accessorKey: "avgVibes",
       header: ({ column }: { column: Column<OverviewData, unknown> }) => (
-        <ScoreHeader column={column} icon="🧑‍🎤" />
+        <SortableHeader column={column}>🧑‍🎤</SortableHeader>
       ),
-      cell: ({ row }: { row: Row<OverviewData> }) => formatScore(row.original.avgVibes),
+      cell: ({ row }: { row: Row<OverviewData> }) => (
+        <span className="text-[#22d3ee]">{formatScore(row.original.avgVibes)}</span>
+      ),
     },
     {
       accessorKey: "totalAvg",
       header: ({ column }: { column: Column<OverviewData, unknown> }) => (
-        <TotalHeader column={column} />
+        <SortableHeader column={column}>Total</SortableHeader>
       ),
       cell: ({ row }: { row: Row<OverviewData> }) => (
-        <span className="font-semibold">{formatScore(row.original.totalAvg)}</span>
+        <span className="font-extrabold text-[#f5b800]">{formatScore(row.original.totalAvg)}</span>
       ),
     },
     {
       id: "numRaters",
       header: ({ column }: { column: Column<OverviewData, unknown> }) => (
-        <NumRatersHeader column={column} />
+        <SortableHeader column={column}>#V</SortableHeader>
       ),
       accessorKey: "numRaters",
-      cell: (info) => info.getValue<number>(),
+      cell: (info) => (
+        <span className="text-[#8a8a9a] text-xs font-semibold">{info.getValue<number>()}</span>
+      ),
     },
   ];
 }
 
 const OverviewPage: React.FC = () => {
   const { roomName } = useParams<{ roomName: string }>();
-  const navigate = useNavigate();
   const year = useAppYear();
   const contestants = getContestantsByYear(year);
   const { roomId: storedRoomId } = useEurovisionUser();
@@ -254,10 +181,8 @@ const OverviewPage: React.FC = () => {
     {},
   );
 
-  // Simple Set creation — no need for useMemo (rerender-simple-expression-in-memo)
   const yearContestantIds = new Set(contestants.map((c) => c.id));
 
-  // Simple filter operations — no need for useMemo
   const roomDataForYear = (roomOverviewQueryData || []).filter((row) =>
     yearContestantIds.has(row.contestantId),
   );
@@ -274,15 +199,12 @@ const OverviewPage: React.FC = () => {
     { id: "totalAvg", desc: true },
   ]);
 
-  // Columns are recreated when year changes, but extracted outside component logic
   const columns = React.useMemo(() => createColumns(year), [year]);
 
   const roomTable = useReactTable({
     data: roomDataForYear,
     columns,
-    state: {
-      sorting: roomSorting,
-    },
+    state: { sorting: roomSorting },
     onSortingChange: setRoomSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -291,186 +213,131 @@ const OverviewPage: React.FC = () => {
   const globalTable = useReactTable({
     data: globalDataForYear,
     columns,
-    state: {
-      sorting: globalSorting,
-    },
+    state: { sorting: globalSorting },
     onSortingChange: setGlobalSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const TableView = ({
+    table,
+    emptyMessage,
+  }: {
+    table: ReturnType<typeof useReactTable<OverviewData>>;
+    emptyMessage: string;
+  }) => {
+    const rows = table.getRowModel().rows;
+    if (rows.length === 0) {
+      return (
+        <p className="text-center text-[#8a8a9a] text-sm py-8 font-medium">
+          {emptyMessage}
+        </p>
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto -mx-5 px-5">
+        <table className="w-full min-w-[340px]">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} className="border-b border-white/[0.08]">
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className="px-0.5">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.id}
+                className="transition-colors hover:bg-white/[0.02]"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className={getCellClass(cell.column.id, cell.getValue())}
+                  >
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext(),
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   if (!storedRoomId && globalOverviewQueryData === undefined) {
     return (
-      <div className="p-4 text-red-500">
-        Loading data or not in a room. Please wait or{" "}
-        <Button variant="link" asChild>
-          <Link to="/">re-join a room</Link>
-        </Button>
-        .
+      <div className="p-4 text-center">
+        <p className="text-red-400 font-medium mb-4">Loading data...</p>
+        <Link to="/" className="text-[#f5b800] font-semibold hover:underline">
+          Re-join a room
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="space-y-6 pb-4">
       {storedRoomId ? (
-        <Card className="w-full max-w-4xl bg-white/90 shadow-xl py-2 gap-0">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl font-bold">
+        <div className="bg-[#1a1a26] rounded-2xl border border-white/[0.08] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="size-4 text-[#8a8a9a]" />
+            <h2 className="text-lg font-extrabold tracking-tight text-[#f0f0f5]">
               {roomName} Scores
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {roomOverviewQueryData === undefined ? (
-              <p className="text-center text-gray-700">
-                Loading room overview...
-              </p>
-            ) : roomOverviewQueryData.length === 0 ? (
-              <p className="text-center text-gray-700">
-                No ratings submitted yet for this room.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table className="min-w-full">
-                  <TableHeader>
-                    {roomTable.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <TableHead
-                            key={header.id}
-                            className={getHeadClass(header.column.id)}
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableHeader>
-                  <TableBody>
-                    {roomTable.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id}>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className={getCellClass(
-                              cell.column.id,
-                              cell.getValue(),
-                            )}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </h2>
+          </div>
+          {roomOverviewQueryData === undefined ? (
+            <p className="text-center text-[#8a8a9a] text-sm py-8">Loading room overview...</p>
+          ) : (
+            <TableView
+              table={roomTable}
+              emptyMessage="No ratings submitted yet for this room."
+            />
+          )}
+        </div>
       ) : (
-        <div className="p-4 text-orange-600 text-center bg-orange-100 border border-orange-300 rounded-md shadow-md w-full max-w-4xl">
-          <p className="font-semibold">
-            Room-specific averages are not available.
+        <div className="bg-[#1a1a26]/60 rounded-2xl border border-[#f5b800]/10 p-5 text-center">
+          <p className="text-[#f0f0f5] font-semibold mb-1">
+            Room-specific averages are not available
           </p>
-          <p>
-            You are not currently in a room. You can view global averages below,
-            or join/create a room from the{" "}
-            <Link
-              to="/"
-              className="underline text-purple-700 hover:text-purple-900"
-            >
-              homepage
+          <p className="text-[#8a8a9a] text-sm">
+            You are not currently in a room.{" "}
+            <Link to="/" className="text-[#f5b800] hover:underline font-medium">
+              Join one
             </Link>
-            .
           </p>
         </div>
       )}
 
-      {/* Global Averages Card */}
-      <Card className="w-full max-w-4xl bg-white/90 shadow-xl py-2 gap-0">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">
+      <div className="bg-[#1a1a26] rounded-2xl border border-white/[0.08] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
+        <div className="flex items-center gap-2 mb-4">
+          <Globe className="size-4 text-[#8a8a9a]" />
+          <h2 className="text-lg font-extrabold tracking-tight text-[#f0f0f5]">
             Global Scores
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {globalOverviewQueryData === undefined ? (
-            <p className="text-center text-gray-700">
-              Loading global overview...
-            </p>
-          ) : globalOverviewQueryData.length === 0 ? (
-            <p className="text-center text-gray-700">
-              No ratings submitted yet globally.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table className="min-w-full">
-                <TableHeader>
-                  {globalTable.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead
-                          key={header.id}
-                          className={getHeadClass(header.column.id)}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {globalTable.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          className={getGlobalCellClass(
-                            cell.column.id,
-                            cell.getValue(),
-                          )}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            void navigate(
-              roomName ? buildRoomPath(year, roomName, "/contestants") : "/",
-            );
-          }}
-          className="w-full"
-        >
-          Back to Contestant List
-        </Button>
+          </h2>
+        </div>
+        {globalOverviewQueryData === undefined ? (
+          <p className="text-center text-[#8a8a9a] text-sm py-8">Loading global overview...</p>
+        ) : (
+          <TableView
+            table={globalTable}
+            emptyMessage="No ratings submitted yet globally."
+          />
+        )}
       </div>
     </div>
   );
