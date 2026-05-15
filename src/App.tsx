@@ -21,6 +21,14 @@ function App() {
           }
         />
         <Route
+          path="/:year/room/:roomName/contestants"
+          element={
+            <Layout>
+              <ContestantListPage />
+            </Layout>
+          }
+        />
+        <Route
           path="/room/:roomName/contestant/:contestantId"
           element={
             <Layout>
@@ -29,7 +37,23 @@ function App() {
           }
         />
         <Route
+          path="/:year/room/:roomName/contestant/:contestantId"
+          element={
+            <Layout>
+              <ContestantRatingPage />
+            </Layout>
+          }
+        />
+        <Route
           path="/room/:roomName/overview"
+          element={
+            <Layout>
+              <OverviewPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/:year/room/:roomName/overview"
           element={
             <Layout>
               <OverviewPage />

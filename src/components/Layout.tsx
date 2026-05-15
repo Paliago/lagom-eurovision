@@ -2,6 +2,7 @@ import type React from "react";
 import { useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { getAnimalEmojiForUser } from "@/lib/emoji";
+import { useAppYear, buildRoomPath } from "@/lib/year";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -10,13 +11,14 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
 	const { roomName } = useParams<{ roomName?: string }>();
 	const navigate = useNavigate();
+	const year = useAppYear();
 	const nickname = localStorage.getItem("eurovisionNickname") || "Guest";
 	const storedRoomId = localStorage.getItem("eurovisionRoomId");
 	const userId = localStorage.getItem("eurovisionUserId");
 
 	const handleViewOverview = () => {
 		if (roomName) {
-			void navigate(`/room/${roomName}/overview`);
+			void navigate(buildRoomPath(year, roomName, "/overview"));
 		} else if (storedRoomId) {
 			console.warn(
 				"Navigating to overview without roomName in URL, using stored info or redirecting to home.",
@@ -29,7 +31,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
 	const handleNavigateToContestantList = () => {
 		if (roomName) {
-			void navigate(`/room/${roomName}/contestants`);
+			void navigate(buildRoomPath(year, roomName, "/contestants"));
 		}
 	};
 

@@ -13,7 +13,9 @@ const countryToFlagFile: Record<string, string> = {
 	Australia: "Flag_of_Australia_(converted).svg",
 	Austria: "Flag_of_Austria.svg",
 	Azerbaijan: "Flag_of_Azerbaijan.svg",
+	Belarus: "Flag_of_Belarus.svg",
 	Belgium: "Flag_of_Belgium.svg",
+	Bulgaria: "Flag_of_Bulgaria.svg",
 	Croatia: "Flag_of_Croatia.svg",
 	Cyprus: "Flag_of_Cyprus.svg",
 	Czechia: "Flag_of_the_Czech_Republic.svg",
@@ -32,11 +34,13 @@ const countryToFlagFile: Record<string, string> = {
 	Lithuania: "Flag_of_Lithuania.svg",
 	Luxembourg: "Flag_of_Luxembourg.svg",
 	Malta: "Flag of Malta.svg",
+	Moldova: "Flag_of_Moldova.svg",
 	Montenegro: "Flag_of_Montenegro.svg",
 	Netherlands: "Flag_of_the_Netherlands.svg",
 	Norway: "Flag of Norway.svg",
 	Poland: "Flag_of_Poland.svg",
 	Portugal: "Flag_of_Portugal.svg",
+	Romania: "Flag_of_Romania.svg",
 	"San Marino": "Flag_of_San_Marino.svg",
 	Serbia: "Flag_of_Serbia.svg",
 	Slovenia: "Flag_of_Slovenia.svg",
@@ -60,7 +64,10 @@ const getFlagUrl = (country: string): string => {
 	return `/flags/${encodeURIComponent(fileName)}`;
 };
 
-export const contestants: Contestant[] = [
+export const DEFAULT_YEAR = 2026;
+export const VALID_YEARS: number[] = [2025, 2026];
+
+export const contestants2025: Contestant[] = [
 	{
 		id: "esc2025_1",
 		name: "Kyle Alessandro",
@@ -71,7 +78,7 @@ export const contestants: Contestant[] = [
 	{
 		id: "esc2025_2",
 		name: "Laura Thorn",
-		song: "La poupée monte le son",
+		song: "La poup\u{E9}e monte le son",
 		country: "Luxembourg",
 		flagUrl: getFlagUrl("Luxembourg"),
 	},
@@ -126,8 +133,8 @@ export const contestants: Contestant[] = [
 	},
 	{
 		id: "esc2025_10",
-		name: "Væb",
-		song: "Róa",
+		name: "V\u{E6}b",
+		song: "R\u{F3}a",
 		country: "Iceland",
 		flagUrl: getFlagUrl("Iceland"),
 	},
@@ -189,7 +196,7 @@ export const contestants: Contestant[] = [
 	},
 	{
 		id: "esc2025_19",
-		name: "Zoë Më",
+		name: "Zo\u{EB} M\u{EB}",
 		song: "Voyage",
 		country: "Switzerland",
 		flagUrl: getFlagUrl("Switzerland"),
@@ -266,7 +273,7 @@ export const contestants: Contestant[] = [
 	// },
 	// {
 	// 	id: "esc2025_7",
-	// 	name: "Marko Bošnjak",
+	// 	name: "Marko Bo\u{161}njak",
 	// 	song: "Poison Cake",
 	// 	country: "Croatia",
 	// 	flagUrl: getFlagUrl("Croatia"),
@@ -301,8 +308,8 @@ export const contestants: Contestant[] = [
 	// },
 	// {
 	// 	id: "esc2025_25_montenegro",
-	// 	name: "Nina Žižić",
-	// 	song: "Dobrodošli",
+	// 	name: "Nina \u{17D}i\u{17E}i\u{107}",
+	// 	song: "Dobrodo\u{161}li",
 	// 	country: "Montenegro",
 	// 	flagUrl: getFlagUrl("Montenegro"),
 	// },
@@ -322,27 +329,225 @@ export const contestants: Contestant[] = [
 	// },
 ];
 
-export const getContestantById = (id: string) =>
-	contestants.find((c) => c.id === id);
+export const contestants2026: Contestant[] = [
+	{
+		id: "esc2026_1",
+		name: "S\u{F8}ren Torpegaard Lund",
+		song: "F\u{F8}r Vi G\u{E5}r Hjem",
+		country: "Denmark",
+		flagUrl: getFlagUrl("Denmark"),
+	},
+	{
+		id: "esc2026_2",
+		name: "Sarah Engels",
+		song: "Fire",
+		country: "Germany",
+		flagUrl: getFlagUrl("Germany"),
+	},
+	{
+		id: "esc2026_3",
+		name: "Noam Bettan",
+		song: "Michelle",
+		country: "Israel",
+		flagUrl: getFlagUrl("Israel"),
+	},
+	{
+		id: "esc2026_4",
+		name: "ESSYLA",
+		song: "Dancing on the Ice",
+		country: "Belgium",
+		flagUrl: getFlagUrl("Belgium"),
+	},
+	{
+		id: "esc2026_5",
+		name: "Alis",
+		song: "N\u{E2}n",
+		country: "Albania",
+		flagUrl: getFlagUrl("Albania"),
+	},
+	{
+		id: "esc2026_6",
+		name: "Akylas",
+		song: "Ferto",
+		country: "Greece",
+		flagUrl: getFlagUrl("Greece"),
+	},
+	{
+		id: "esc2026_7",
+		name: "LEL\u{C9}KA",
+		song: "Ridnym",
+		country: "Ukraine",
+		flagUrl: getFlagUrl("Ukraine"),
+	},
+	{
+		id: "esc2026_8",
+		name: "Delta Goodrem",
+		song: "Eclipse",
+		country: "Australia",
+		flagUrl: getFlagUrl("Australia"),
+	},
+	{
+		id: "esc2026_9",
+		name: "LAVINA",
+		song: "Kraj Mene",
+		country: "Serbia",
+		flagUrl: getFlagUrl("Serbia"),
+	},
+	{
+		id: "esc2026_10",
+		name: "AIDAN",
+		song: "Bella",
+		country: "Malta",
+		flagUrl: getFlagUrl("Malta"),
+	},
+	{
+		id: "esc2026_11",
+		name: "Daniel Zizka",
+		song: "CROSSROADS",
+		country: "Czechia",
+		flagUrl: getFlagUrl("Czechia"),
+	},
+	{
+		id: "esc2026_12",
+		name: "DARA",
+		song: "Bangaranga",
+		country: "Bulgaria",
+		flagUrl: getFlagUrl("Bulgaria"),
+	},
+	{
+		id: "esc2026_13",
+		name: "LELEK",
+		song: "Andromeda",
+		country: "Croatia",
+		flagUrl: getFlagUrl("Croatia"),
+	},
+	{
+		id: "esc2026_14",
+		name: "LOOK MUM NO COMPUTER",
+		song: "Eins, Zwei, Drei",
+		country: "United Kingdom",
+		flagUrl: getFlagUrl("United Kingdom"),
+	},
+	{
+		id: "esc2026_15",
+		name: "Monroe",
+		song: "Regarde !",
+		country: "France",
+		flagUrl: getFlagUrl("France"),
+	},
+	{
+		id: "esc2026_16",
+		name: "Satoshi",
+		song: "Viva, Moldova!",
+		country: "Moldova",
+		flagUrl: getFlagUrl("Moldova"),
+	},
+	{
+		id: "esc2026_17",
+		name: "Linda Lampenius x Pete Parkkonen",
+		song: "Liekinheitin",
+		country: "Finland",
+		flagUrl: getFlagUrl("Finland"),
+	},
+	{
+		id: "esc2026_18",
+		name: "ALICJA",
+		song: "Pray",
+		country: "Poland",
+		flagUrl: getFlagUrl("Poland"),
+	},
+	{
+		id: "esc2026_19",
+		name: "Lion Ceccah",
+		song: "S\u{F3}lo Quiero M\u{E1}s",
+		country: "Lithuania",
+		flagUrl: getFlagUrl("Lithuania"),
+	},
+	{
+		id: "esc2026_20",
+		name: "FELICIA",
+		song: "My System",
+		country: "Sweden",
+		flagUrl: getFlagUrl("Sweden"),
+	},
+	{
+		id: "esc2026_21",
+		name: "Antigoni",
+		song: "JALLA",
+		country: "Cyprus",
+		flagUrl: getFlagUrl("Cyprus"),
+	},
+	{
+		id: "esc2026_22",
+		name: "Sal Da Vinci",
+		song: "Per Sempre S\u{EC}",
+		country: "Italy",
+		flagUrl: getFlagUrl("Italy"),
+	},
+	{
+		id: "esc2026_23",
+		name: "JONAS LOVV",
+		song: "YA YA YA",
+		country: "Norway",
+		flagUrl: getFlagUrl("Norway"),
+	},
+	{
+		id: "esc2026_24",
+		name: "Alexandra C\u{103}pit\u{103}nescu",
+		song: "Choke Me",
+		country: "Romania",
+		flagUrl: getFlagUrl("Romania"),
+	},
+	{
+		id: "esc2026_25",
+		name: "COSM\u{D3}",
+		song: "Tanzschein",
+		country: "Austria",
+		flagUrl: getFlagUrl("Austria"),
+	},
+];
 
-export const getNextContestantId = (currentId: string): string | null => {
-	const currentIndex = contestants.findIndex((c) => c.id === currentId);
+const CONTESTANTS_BY_YEAR: Record<number, Contestant[]> = {
+	2025: contestants2025,
+	2026: contestants2026,
+};
+
+export function getContestantsByYear(year: number): Contestant[] {
+	return CONTESTANTS_BY_YEAR[year] || contestants2026;
+}
+
+export const getContestantById = (id: string, year: number = DEFAULT_YEAR) =>
+	getContestantsByYear(year).find((c) => c.id === id);
+
+export const getNextContestantId = (
+	currentId: string,
+	year: number = DEFAULT_YEAR,
+): string | null => {
+	const arr = getContestantsByYear(year);
+	const currentIndex = arr.findIndex((c) => c.id === currentId);
 	if (currentIndex === -1) {
 		return null; // Should not happen if currentId is valid
 	}
-	if (currentIndex === contestants.length - 1) {
-		return contestants[0].id; // Wrap to the first contestant
+	if (currentIndex === arr.length - 1) {
+		return arr[0].id; // Wrap to the first contestant
 	}
-	return contestants[currentIndex + 1].id;
+	return arr[currentIndex + 1].id;
 };
 
-export const getPreviousContestantId = (currentId: string): string | null => {
-	const currentIndex = contestants.findIndex((c) => c.id === currentId);
+export const getPreviousContestantId = (
+	currentId: string,
+	year: number = DEFAULT_YEAR,
+): string | null => {
+	const arr = getContestantsByYear(year);
+	const currentIndex = arr.findIndex((c) => c.id === currentId);
 	if (currentIndex === -1) {
 		return null; // Should not happen if currentId is valid
 	}
 	if (currentIndex === 0) {
-		return contestants[contestants.length - 1].id; // Wrap to the last contestant
+		return arr[arr.length - 1].id; // Wrap to the last contestant
 	}
-	return contestants[currentIndex - 1].id;
+	return arr[currentIndex - 1].id;
 };
+
+// Backward-compatible default export for pages that still reference it directly
+export const contestants = contestants2026;

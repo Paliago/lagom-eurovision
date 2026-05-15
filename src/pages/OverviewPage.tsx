@@ -6,8 +6,9 @@ import type { Id } from "../../convex/_generated/dataModel";
 import {
   type Contestant,
   getContestantById,
-  contestants,
+  getContestantsByYear,
 } from "@/lib/contestants";
+import { useAppYear, buildRoomPath } from "@/lib/year";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -42,6 +43,8 @@ interface OverviewData {
 const OverviewPage: React.FC = () => {
   const { roomName } = useParams<{ roomName: string }>();
   const navigate = useNavigate();
+  const year = useAppYear();
+  const contestants = getContestantsByYear(year);
   const storedRoomId = localStorage.getItem(
     "eurovisionRoomId",
   ) as Id<"rooms"> | null;
@@ -54,6 +57,21 @@ const OverviewPage: React.FC = () => {
   const globalOverviewQueryData = useQuery(
     api.ratings.getGlobalOverviewRatings,
     {},
+  );
+
+  const yearContestantIds = React.useMemo(
+    () => new Set(contestants.map((c) => c.id)),
+    [contestants],
+  );
+
+  const roomDataForYear = React.useMemo(
+    () => (roomOverviewQueryData || []).filter((row) => yearContestantIds.has(row.contestantId)),
+    [roomOverviewQueryData, yearContestantIds],
+  );
+
+  const globalDataForYear = React.useMemo(
+    () => (globalOverviewQueryData || []).filter((row) => yearContestantIds.has(row.contestantId)),
+    [globalOverviewQueryData, yearContestantIds],
   );
 
   const [roomSorting, setRoomSorting] = React.useState<SortingState>([
@@ -231,7 +249,7 @@ const OverviewPage: React.FC = () => {
   );
 
   const roomTable = useReactTable({
-    data: roomOverviewQueryData || [],
+    data: roomDataForYear,
     columns,
     state: {
       sorting: roomSorting,
@@ -242,7 +260,7 @@ const OverviewPage: React.FC = () => {
   });
 
   const globalTable = useReactTable({
-    data: globalOverviewQueryData || [],
+    data: globalDataForYear,
     columns,
     state: {
       sorting: globalSorting,
@@ -454,7 +472,9 @@ const OverviewPage: React.FC = () => {
         <Button
           variant="secondary"
           onClick={() => {
-            void navigate(roomName ? `/room/${roomName}/contestants` : "/");
+            void navigate(
+              roomName ? buildRoomPath(year, roomName, "/contestants") : "/",
+            );
           }}
           className="w-full"
         >

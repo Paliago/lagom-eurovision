@@ -8,11 +8,14 @@ import {
 	CardContent,
 	CardFooter,
 } from "@/components/ui/card";
-import { contestants } from "@/lib/contestants";
+import { getContestantsByYear } from "@/lib/contestants";
+import { useAppYear, buildRoomPath } from "@/lib/year";
 
 const ContestantListPage: React.FC = () => {
 	const { roomName } = useParams<{ roomName: string }>();
 	const navigate = useNavigate();
+	const year = useAppYear();
+	const contestants = getContestantsByYear(year);
 
 	return (
 		<div className="flex justify-center">
@@ -32,7 +35,11 @@ const ContestantListPage: React.FC = () => {
 									className="w-full justify-start h-auto p-0 whitespace-normal"
 								>
 									<Link
-										to={`/room/${roomName}/contestant/${contestant.id}`}
+										to={buildRoomPath(
+											year,
+											roomName || "",
+											`/contestant/${contestant.id}`,
+										)}
 										className="block p-4 w-full"
 									>
 										<div className="flex items-center w-full">

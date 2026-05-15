@@ -16,10 +16,11 @@ import {
 import {
 	type Contestant,
 	getContestantById,
+	getContestantsByYear,
 	getNextContestantId,
 	getPreviousContestantId,
-	contestants,
 } from "@/lib/contestants";
+import { useAppYear, buildRoomPath } from "@/lib/year";
 import { getAnimalEmojiForUser } from "@/lib/emoji";
 import { getBackgroundColorForRater } from "@/lib/colors";
 
@@ -29,9 +30,11 @@ const ContestantRatingPage: React.FC = () => {
 		contestantId: string;
 	}>();
 	const navigate = useNavigate();
+	const year = useAppYear();
+	const contestants = getContestantsByYear(year);
 
 	const contestant: Contestant | null | undefined = contestantId
-		? getContestantById(contestantId)
+		? getContestantById(contestantId, year)
 		: null;
 
 	const contestantOrder = contestantId
@@ -287,17 +290,23 @@ const ContestantRatingPage: React.FC = () => {
 			setMusicScore("");
 			setPerformanceScore("");
 			setVibesScore("");
-			void navigate(`/room/${roomName}/contestant/${newContestantId}`);
+			void navigate(
+				buildRoomPath(
+					year,
+					roomName,
+					`/contestant/${newContestantId}`,
+				),
+			);
 		}
 	};
 
 	const handleNext = () =>
 		navigateToContestant(
-			contestantId ? getNextContestantId(contestantId) : null,
+			contestantId ? getNextContestantId(contestantId, year) : null,
 		);
 	const handlePrevious = () =>
 		navigateToContestant(
-			contestantId ? getPreviousContestantId(contestantId) : null,
+			contestantId ? getPreviousContestantId(contestantId, year) : null,
 		);
 
 	useEffect(() => {
@@ -311,7 +320,13 @@ const ContestantRatingPage: React.FC = () => {
 			<div className="p-4 text-red-500">
 				Contestant not found.{" "}
 				<Button variant="link" asChild>
-					<Link to={roomName ? `/room/${roomName}/contestants` : "/"}>
+					<Link
+						to={
+							roomName
+								? buildRoomPath(year, roomName, "/contestants")
+								: "/"
+						}
+					>
 						Back to List
 					</Link>
 				</Button>
@@ -570,7 +585,11 @@ const ContestantRatingPage: React.FC = () => {
 				<div className="px-4">
 					<Button
 						onClick={() =>
-							void navigate(roomName ? `/room/${roomName}/contestants` : "/")
+							void navigate(
+								roomName
+									? buildRoomPath(year, roomName, "/contestants")
+									: "/",
+							)
 						}
 						className="w-full bg-purple-500 hover:bg-purple-600 text-white touch-manipulation"
 					>
