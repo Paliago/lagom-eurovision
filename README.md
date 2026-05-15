@@ -6,6 +6,18 @@ Create a room, share the name, and rate every contestant across three categories
 
 Live at **[lagomeurovision.com](https://lagomeurovision.com)**
 
+## Third Iteration
+
+The first iteration of the application was done in 2024 to test the capabilities of building applications just relying on AI agents to do the job while incorporating new tech (outside of it's training data).
+It used Reflect to livesync rooms and was mostly built with Cursor.
+[2024 Github](https://github.com/Paliago/lagom-eurovision-2024)
+
+The second iteration uses convex and is mostly the same as this third version.
+That version was built with OpenCode using mostly Claude Sonnet (3.5 I think would be correct for the time).
+
+And now for 2026 I've just cleaned up the repo with GPT 5.5 and Kimi 2.6.
+Also redesigned it and added haptics and the ability to just add new contestants to allow this to be easily maintainable.
+
 ## Features
 
 - **Live rooms** — Join a room with a nickname and vote in real-time. No accounts, no passwords.
@@ -19,14 +31,14 @@ Live at **[lagomeurovision.com](https://lagomeurovision.com)**
 
 ## Tech Stack
 
-| Layer | Tech |
-|---|---|
-| Frontend | React 19 · Vite · TypeScript · Tailwind CSS v4 · shadcn/ui |
-| Router | react-router v7 |
-| Backend | Convex (real-time database + server functions) |
-| Deployment | SST v3 → AWS StaticSite (`eu-north-1`) |
-| Icons | Lucide React |
-| Package Manager | Bun |
+| Layer           | Tech                                                       |
+| --------------- | ---------------------------------------------------------- |
+| Frontend        | React 19 · Vite · TypeScript · Tailwind CSS v4 · shadcn/ui |
+| Router          | react-router v7                                            |
+| Backend         | Convex (real-time database + server functions)             |
+| Deployment      | SST v3 → AWS StaticSite (`eu-north-1`)                     |
+| Icons           | Lucide React                                               |
+| Package Manager | Bun                                                        |
 
 ## Getting Started
 
@@ -44,14 +56,14 @@ bun run dev
 
 This starts the Vite frontend and Convex backend in parallel, then opens the Convex dashboard.
 
-| Script | Purpose |
-|---|---|
-| `bun run dev` | Frontend + backend concurrently |
-| `bun run dev:frontend` | Vite dev server only |
-| `bun run dev:backend` | Convex dev server only |
-| `bun run build` | Type-check and production build |
-| `bun run preview` | Preview the production build locally |
-| `bun run lint` | TypeScript + ESLint |
+| Script                 | Purpose                              |
+| ---------------------- | ------------------------------------ |
+| `bun run dev`          | Frontend + backend concurrently      |
+| `bun run dev:frontend` | Vite dev server only                 |
+| `bun run dev:backend`  | Convex dev server only               |
+| `bun run build`        | Type-check and production build      |
+| `bun run preview`      | Preview the production build locally |
+| `bun run lint`         | TypeScript + ESLint                  |
 
 ### Environment Variables
 
@@ -73,11 +85,11 @@ This starts the Vite frontend and Convex backend in parallel, then opens the Con
 
 The app defaults to the latest contest year (currently **2026**). To view or score a previous year, prefix the URL with `/{year}/`:
 
-| Page | 2026 (default) | 2025 |
-|---|---|---|
-| Contestant List | `/room/:roomName/contestants` | `/2025/room/:roomName/contestants` |
+| Page            | 2026 (default)                   | 2025                                  |
+| --------------- | -------------------------------- | ------------------------------------- |
+| Contestant List | `/room/:roomName/contestants`    | `/2025/room/:roomName/contestants`    |
 | Rate Contestant | `/room/:roomName/contestant/:id` | `/2025/room/:roomName/contestant/:id` |
-| Overview | `/room/:roomName/overview` | `/2025/room/:roomName/overview` |
+| Overview        | `/room/:roomName/overview`       | `/2025/room/:roomName/overview`       |
 
 Once on a year-prefixed route, all navigation preserves the year automatically.
 
