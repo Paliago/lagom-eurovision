@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, Link } from "react-router";
+import { useParams, useNavigate, Link } from "react-router";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -8,8 +8,9 @@ import {
   getContestantById,
   getContestantsByYear,
 } from "@/lib/contestants";
-import { useAppYear } from "@/lib/year";
+import { useAppYear, buildRoomPath } from "@/lib/year";
 import { useEurovisionUser } from "@/lib/hooks";
+import { useHaptics } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import {
   type ColumnDef,
@@ -167,9 +168,11 @@ function createColumns(year: number): ColumnDef<OverviewData>[] {
 
 const OverviewPage: React.FC = () => {
   const { roomName } = useParams<{ roomName: string }>();
+  const navigate = useNavigate();
   const year = useAppYear();
   const contestants = getContestantsByYear(year);
   const { roomId: storedRoomId } = useEurovisionUser();
+  const { trigger } = useHaptics();
 
   const roomOverviewQueryData = useQuery(
     api.ratings.getOverviewRatingsForRoom,
@@ -235,6 +238,11 @@ const OverviewPage: React.FC = () => {
       );
     }
 
+    const handleRowClick = (contestantId: string) => {
+      trigger("light");
+      void navigate(buildRoomPath(year, roomName || "", `/contestant/${contestantId}`));
+    };
+
     return (
       <div className="overflow-x-auto -mx-4 px-4">
         <table className="w-full min-w-[340px]">
@@ -258,7 +266,8 @@ const OverviewPage: React.FC = () => {
             {rows.map((row) => (
               <tr
                 key={row.id}
-                className="transition-colors hover:bg-white/[0.02]"
+                className="transition-colors hover:bg-white/[0.03] active:bg-white/[0.05] cursor-pointer"
+                onClick={() => handleRowClick(row.original.contestantId)}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
@@ -291,7 +300,7 @@ const OverviewPage: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="py-5">
       {storedRoomId ? (
         <div className="pb-6 border-b border-white/[0.06]">
           <div className="flex items-center gap-2 mb-5">

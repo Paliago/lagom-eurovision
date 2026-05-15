@@ -12,7 +12,7 @@ const ContestantListPage: React.FC = () => {
 	const { trigger } = useHaptics();
 
 	return (
-		<div>
+		<div className="py-5">
 			<div className="flex items-center justify-between mb-5 pb-4 border-b border-white/[0.06]">
 				<h1 className="text-2xl font-extrabold tracking-tight text-[#f0f0f5]">
 					Contestants

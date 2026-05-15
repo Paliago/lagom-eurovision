@@ -105,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 			</header>
 
 			{/* Main content */}
-			<main className="flex-1 w-full max-w-lg mx-auto px-4 py-5">
+			<main className="flex-1 w-full max-w-lg mx-auto px-4">
 				{children}
 			</main>
 

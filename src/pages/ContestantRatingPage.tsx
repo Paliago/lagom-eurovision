@@ -1,26 +1,33 @@
 import type React from "react";
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router";
-import { useQuery, useMutation } from "convex/react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Input } from "@/components/ui/input";
 import {
 	type Contestant,
 	getContestantById,
+	getContestantIndexById,
 	getContestantsByYear,
 	getNextContestantId,
 	getPreviousContestantId,
-	getContestantIndexById,
 } from "@/lib/contestants";
-import { useAppYear, buildRoomPath } from "@/lib/year";
 import { getAnimalEmojiForUser } from "@/lib/emoji";
 import { useEurovisionUser } from "@/lib/hooks";
 import { useHaptics } from "@/lib/haptics";
+import { buildRoomPath, useAppYear } from "@/lib/year";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function deriveInitialScore(
-	data: { musicScore?: number | null; performanceScore?: number | null; vibesScore?: number | null } | null | undefined,
+	data:
+		| {
+				musicScore?: number | null;
+				performanceScore?: number | null;
+				vibesScore?: number | null;
+			}
+		| null
+		| undefined,
 	key: "musicScore" | "performanceScore" | "vibesScore",
 ): number | string {
 	if (!data) return "";
@@ -34,37 +41,60 @@ const CATEGORY_META = {
 	vibes: { label: "Vibes", icon: "🧑‍🎤", color: "#22d3ee" },
 } as const;
 
-const ContestantRatingPage: React.FC = () => {
-	const { roomName, contestantId } = useParams<{
-		roomName: string;
-		contestantId: string;
-	}>();
-	const navigate = useNavigate();
-	const year = useAppYear();
+function useCoarsePointer(): boolean {
+	const [isCoarsePointer, setIsCoarsePointer] = useState(() =>
+		window.matchMedia("(pointer: coarse)").matches,
+	);
+
+	useEffect(() => {
+		const mediaQuery = window.matchMedia("(pointer: coarse)");
+		const handleChange = () => setIsCoarsePointer(mediaQuery.matches);
+
+		mediaQuery.addEventListener("change", handleChange);
+		return () => mediaQuery.removeEventListener("change", handleChange);
+	}, []);
+
+	return isCoarsePointer;
+}
+
+interface ContestantPanelProps {
+	contestantId: string;
+	roomName: string;
+	year: number;
+	isActive: boolean;
+	onNavigate: (direction: "previous" | "next") => void;
+}
+
+function ContestantPanel({
+	contestantId,
+	roomName,
+	year,
+	isActive,
+	onNavigate,
+}: ContestantPanelProps) {
 	const contestants = getContestantsByYear(year);
-	const { userId, nickname: storedNickname, roomId: storedRoomId } = useEurovisionUser();
+	const { userId, nickname: storedNickname, roomId: storedRoomId } =
+		useEurovisionUser();
 	const currentNickname = storedNickname || "User";
 	const { trigger } = useHaptics();
 
-	const contestant: Contestant | null | undefined = contestantId
-		? getContestantById(contestantId, year)
-		: null;
-
-	const contestantOrder = contestantId
-		? (getContestantIndexById(contestantId, year) ?? -1) + 1
-		: 0;
+	const contestant: Contestant | null | undefined = getContestantById(
+		contestantId,
+		year,
+	);
+	const contestantOrder = (getContestantIndexById(contestantId, year) ?? -1) + 1;
 	const totalContestants = contestants.length;
 
 	const roomRatingsForContestant = useQuery(
 		api.ratings.getRatingsForRoomAndContestant,
-		storedRoomId && contestantId
-			? { roomId: storedRoomId as Id<"rooms">, contestantId: contestantId }
+		storedRoomId
+			? { roomId: storedRoomId as Id<"rooms">, contestantId }
 			: "skip",
 	);
 
 	const allGlobalRatingsForContestant = useQuery(
 		api.ratings.getGlobalRatingsForContestant,
-		contestantId ? { contestantId: contestantId } : "skip",
+		{ contestantId },
 	);
 
 	const roomUsers = useQuery(
@@ -74,8 +104,8 @@ const ContestantRatingPage: React.FC = () => {
 
 	const currentUserRatingData = useQuery(
 		api.ratings.getUserRatingForContestant,
-		storedRoomId && contestantId && userId
-			? { roomId: storedRoomId as Id<"rooms">, contestantId: contestantId, userId: userId }
+		storedRoomId && userId
+			? { roomId: storedRoomId as Id<"rooms">, contestantId, userId }
 			: "skip",
 	);
 
@@ -92,7 +122,6 @@ const ContestantRatingPage: React.FC = () => {
 	const initializedContestantRef = useRef<string | null>(null);
 	useEffect(() => {
 		if (
-			contestantId &&
 			contestantId !== initializedContestantRef.current &&
 			currentUserRatingData !== undefined
 		) {
@@ -108,29 +137,49 @@ const ContestantRatingPage: React.FC = () => {
 			return { music: null, performance: null, vibes: null, total: null, count: 0 };
 		}
 
-		let sumMusic = 0, countMusic = 0;
-		let sumPerformance = 0, countPerformance = 0;
-		let sumVibes = 0, countVibes = 0;
+		let sumMusic = 0;
+		let countMusic = 0;
+		let sumPerformance = 0;
+		let countPerformance = 0;
+		let sumVibes = 0;
+		let countVibes = 0;
 		const uniqueRaters = new Set<string>();
 
 		for (const rating of roomRatingsForContestant) {
 			uniqueRaters.add(rating.userId);
-			if (typeof rating.musicScore === "number") { sumMusic += rating.musicScore; countMusic++; }
-			if (typeof rating.performanceScore === "number") { sumPerformance += rating.performanceScore; countPerformance++; }
-			if (typeof rating.vibesScore === "number") { sumVibes += rating.vibesScore; countVibes++; }
+			if (typeof rating.musicScore === "number") {
+				sumMusic += rating.musicScore;
+				countMusic++;
+			}
+			if (typeof rating.performanceScore === "number") {
+				sumPerformance += rating.performanceScore;
+				countPerformance++;
+			}
+			if (typeof rating.vibesScore === "number") {
+				sumVibes += rating.vibesScore;
+				countVibes++;
+			}
 		}
 
 		const avgMusic = countMusic > 0 ? sumMusic / countMusic : null;
-		const avgPerformance = countPerformance > 0 ? sumPerformance / countPerformance : null;
+		const avgPerformance =
+			countPerformance > 0 ? sumPerformance / countPerformance : null;
 		const avgVibes = countVibes > 0 ? sumVibes / countVibes : null;
-		const validCategoryAverages = [avgMusic, avgPerformance, avgVibes].filter((avg) => avg !== null);
-		const totalAvg = validCategoryAverages.length > 0
-			? validCategoryAverages.reduce((acc, curr) => acc + (curr ?? 0), 0) / validCategoryAverages.length
-			: null;
+		const validCategoryAverages = [avgMusic, avgPerformance, avgVibes].filter(
+			(avg) => avg !== null,
+		);
+		const totalAvg =
+			validCategoryAverages.length > 0
+				? validCategoryAverages.reduce((acc, curr) => acc + (curr ?? 0), 0) /
+					validCategoryAverages.length
+				: null;
 
 		return {
 			music: avgMusic !== null ? Number.parseFloat(avgMusic.toFixed(1)) : null,
-			performance: avgPerformance !== null ? Number.parseFloat(avgPerformance.toFixed(1)) : null,
+			performance:
+				avgPerformance !== null
+					? Number.parseFloat(avgPerformance.toFixed(1))
+					: null,
 			vibes: avgVibes !== null ? Number.parseFloat(avgVibes.toFixed(1)) : null,
 			total: totalAvg !== null ? Number.parseFloat(totalAvg.toFixed(1)) : null,
 			count: uniqueRaters.size,
@@ -163,9 +212,11 @@ const ContestantRatingPage: React.FC = () => {
 				const p = existingRating?.performanceScore ?? null;
 				const v = existingRating?.vibesScore ?? null;
 				const scoresProvided = [m, p, v].filter((s) => s !== null);
-				const individualTotal = scoresProvided.length > 0
-					? scoresProvided.reduce((acc, curr) => acc + (curr ?? 0), 0) / scoresProvided.length
-					: null;
+				const individualTotal =
+					scoresProvided.length > 0
+						? scoresProvided.reduce((acc, curr) => acc + (curr ?? 0), 0) /
+							scoresProvided.length
+						: null;
 
 				return {
 					raterId: roomUser.userId,
@@ -173,7 +224,10 @@ const ContestantRatingPage: React.FC = () => {
 					music: m,
 					performance: p,
 					vibes: v,
-					total: individualTotal !== null ? Number.parseFloat(individualTotal.toFixed(1)) : null,
+					total:
+						individualTotal !== null
+							? Number.parseFloat(individualTotal.toFixed(1))
+							: null,
 				};
 			});
 	}, [roomUsers, roomRatingsForContestant, userId]);
@@ -182,6 +236,8 @@ const ContestantRatingPage: React.FC = () => {
 
 	const handleRatingChange = useCallback(
 		async (category: "music" | "performance" | "vibes", value: string) => {
+			if (!isActive) return;
+
 			let scoreToSet: number | string = "";
 			let scoreToSubmit: number | null = null;
 
@@ -199,12 +255,18 @@ const ContestantRatingPage: React.FC = () => {
 			}
 
 			switch (category) {
-				case "music": setMusicScore(scoreToSet); break;
-				case "performance": setPerformanceScore(scoreToSet); break;
-				case "vibes": setVibesScore(scoreToSet); break;
+				case "music":
+					setMusicScore(scoreToSet);
+					break;
+				case "performance":
+					setPerformanceScore(scoreToSet);
+					break;
+				case "vibes":
+					setVibesScore(scoreToSet);
+					break;
 			}
 
-			if (scoreToSubmit !== null && storedRoomId && contestantId && userId) {
+			if (scoreToSubmit !== null && storedRoomId && userId) {
 				trigger("selection");
 				try {
 					await submitRatingMutation({
@@ -212,7 +274,7 @@ const ContestantRatingPage: React.FC = () => {
 						contestantId,
 						userId,
 						nickname: currentNickname,
-						category: category,
+						category,
 						score: scoreToSubmit,
 					});
 				} catch (error) {
@@ -221,42 +283,32 @@ const ContestantRatingPage: React.FC = () => {
 				}
 			}
 		},
-		[storedRoomId, contestantId, userId, submitRatingMutation, currentNickname, trigger],
+		[
+			contestantId,
+			currentNickname,
+			isActive,
+			storedRoomId,
+			submitRatingMutation,
+			trigger,
+			userId,
+		],
 	);
 
 	const currentUserTotal = useMemo(() => {
 		const scores = [musicScore, performanceScore, vibesScore];
 		const validScores = scores.filter((s) => typeof s === "number");
 		if (validScores.length === 0) {
-			if (musicScore === "" && performanceScore === "" && vibesScore === "") return "—";
+			if (musicScore === "" && performanceScore === "" && vibesScore === "") {
+				return "—";
+			}
 			return "0";
 		}
-		return (validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length).toFixed(1);
+		return (
+			validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length
+		).toFixed(1);
 	}, [musicScore, performanceScore, vibesScore]);
 
-	const navigateToContestant = useCallback(
-		(newContestantId: string | null) => {
-			if (newContestantId && roomName) {
-				setMusicScore("");
-				setPerformanceScore("");
-				setVibesScore("");
-				void navigate(buildRoomPath(year, roomName, `/contestant/${newContestantId}`));
-			}
-		},
-		[navigate, roomName, year],
-	);
-
-	const handleNext = useCallback(() => {
-		trigger("light");
-		navigateToContestant(contestantId ? getNextContestantId(contestantId, year) : null);
-	}, [navigateToContestant, contestantId, year, trigger]);
-
-	const handlePrevious = useCallback(() => {
-		trigger("light");
-		navigateToContestant(contestantId ? getPreviousContestantId(contestantId, year) : null);
-	}, [navigateToContestant, contestantId, year, trigger]);
-
-	if (!contestant || !contestantId) {
+	if (!contestant) {
 		return (
 			<div className="p-4 text-center">
 				<p className="text-red-400 font-medium mb-4">Contestant not found</p>
@@ -269,6 +321,7 @@ const ContestantRatingPage: React.FC = () => {
 			</div>
 		);
 	}
+
 	if (!userId) {
 		return (
 			<div className="p-4 text-center">
@@ -279,6 +332,7 @@ const ContestantRatingPage: React.FC = () => {
 			</div>
 		);
 	}
+
 	if (!storedRoomId) {
 		return (
 			<div className="p-4 text-center">
@@ -290,37 +344,41 @@ const ContestantRatingPage: React.FC = () => {
 		);
 	}
 
+	const getCurrentScore = (cat: "music" | "performance" | "vibes") => {
+		switch (cat) {
+			case "music":
+				return musicScore;
+			case "performance":
+				return performanceScore;
+			case "vibes":
+				return vibesScore;
+		}
+	};
+
 	return (
-		<div className="pb-4">
-			{/* Hero — no card, clean centered */}
-			<div className="text-center pt-2 pb-6 border-b border-white/[0.06]">
+		<div className="min-h-full pt-5 flex flex-col">
+			<div className="text-center pb-6 border-b border-white/[0.06]">
 				<p className="text-[11px] font-bold text-[#8a8a9a] uppercase tracking-widest mb-4">
 					{contestantOrder} of {totalContestants}
 				</p>
 
 				<div className="flex items-center justify-between mb-5 px-2">
 					<button
-						onClick={handlePrevious}
+						onClick={() => onNavigate("previous")}
 						className="flex items-center justify-center w-11 h-11 rounded-full bg-[#1a1a26] border border-white/[0.08] text-[#f5b800] transition-all duration-200 hover:bg-[#222233] active:scale-95"
 						aria-label="Previous contestant"
 					>
 						<ChevronLeft className="size-5" />
 					</button>
 
-					{contestant.flagUrl ? (
-						<img
-							src={contestant.flagUrl}
-							alt={`Flag of ${contestant.country}`}
-							className="w-32 h-20 object-cover rounded-xl shadow-lg border border-white/[0.08]"
-						/>
-					) : (
-						<div className="w-32 h-20 bg-[#1a1a26] flex items-center justify-center text-[#8a8a9a] rounded-xl border border-white/[0.08]">
-							FLAG
-						</div>
-					)}
+					<img
+						src={contestant.flagUrl}
+						alt={`Flag of ${contestant.country}`}
+						className="w-32 h-20 object-cover rounded-xl shadow-lg border border-white/[0.08]"
+					/>
 
 					<button
-						onClick={handleNext}
+						onClick={() => onNavigate("next")}
 						className="flex items-center justify-center w-11 h-11 rounded-full bg-[#1a1a26] border border-white/[0.08] text-[#f5b800] transition-all duration-200 hover:bg-[#222233] active:scale-95"
 						aria-label="Next contestant"
 					>
@@ -336,7 +394,6 @@ const ContestantRatingPage: React.FC = () => {
 				</p>
 			</div>
 
-			{/* Scoreboard — unified table-like grid, no cards */}
 			<div className="py-6 border-b border-white/[0.06]">
 				<div className="flex items-center justify-between mb-4">
 					<h3 className="text-[11px] font-bold text-[#8a8a9a] uppercase tracking-widest">
@@ -349,7 +406,7 @@ const ContestantRatingPage: React.FC = () => {
 				</div>
 
 				<div className="grid grid-cols-5 gap-1 text-center">
-					<div className="text-[10px] font-bold text-[#8a8a9a] uppercase tracking-wider py-2" />
+					<div className="py-2" />
 					<div className="text-[10px] font-bold text-[#8a8a9a] uppercase tracking-wider py-2">🎵</div>
 					<div className="text-[10px] font-bold text-[#8a8a9a] uppercase tracking-wider py-2">💃</div>
 					<div className="text-[10px] font-bold text-[#8a8a9a] uppercase tracking-wider py-2">🧑‍🎤</div>
@@ -369,13 +426,12 @@ const ContestantRatingPage: React.FC = () => {
 				</div>
 			</div>
 
-			{/* Room Ratings — compact rows, no cards */}
 			{otherIndividualRatings.length > 0 && (
 				<div className="py-6 border-b border-white/[0.06]">
 					<h3 className="text-[11px] font-bold text-[#8a8a9a] uppercase tracking-widest mb-4">
 						Room Ratings
 					</h3>
-					<div className="space-y-0">
+					<div>
 						{otherIndividualRatings.map((rater) => (
 							<div
 								key={rater.raterId}
@@ -391,33 +447,31 @@ const ContestantRatingPage: React.FC = () => {
 								</div>
 							</div>
 						))}
-						</div>
 					</div>
-				)}
+				</div>
+			)}
 
-			{/* Spacer so sticky bottom rating doesn't cover last content */}
-			<div className="h-28" />
+			<div className="flex-1 min-h-8" />
 
-			{/* Your Rating — sticky bottom dock, no card borders */}
-			<div className="fixed bottom-14 left-0 right-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-[#f5b800]/20 pb-[env(safe-area-inset-bottom)]">
-				<div className="max-w-lg mx-auto px-4 py-3">
-					<div className="flex items-center justify-between mb-2">
-						<div className="flex items-center gap-1.5">
-							<span className="text-sm">{userId ? getAnimalEmojiForUser(userId) : "🐾"}</span>
-							<span className="text-[11px] font-bold text-[#f5b800] uppercase tracking-widest">
-								Your Rating
-							</span>
-						</div>
-						<span className="text-xs font-bold text-[#8a8a9a]">{currentNickname}</span>
+			<div className="sticky bottom-0 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-[#f5b800]/20 py-3">
+				<div className="flex items-center justify-between mb-2">
+					<div className="flex items-center gap-1.5">
+						<span className="text-sm">{getAnimalEmojiForUser(userId)}</span>
+						<span className="text-[11px] font-bold text-[#f5b800] uppercase tracking-widest">
+							{isActive ? "Your Rating" : "Your Rating Preview"}
+						</span>
 					</div>
+					<span className="text-xs font-bold text-[#8a8a9a]">{currentNickname}</span>
+				</div>
 
-					<div className="grid grid-cols-4 gap-2">
-						{( ["music", "performance", "vibes"] as const ).map((cat) => (
-							<div key={cat} className="flex flex-col items-center gap-1">
-								<span className="text-base leading-none">{CATEGORY_META[cat].icon}</span>
+				<div className="grid grid-cols-4 gap-2">
+					{(["music", "performance", "vibes"] as const).map((cat) => (
+						<div key={cat} className="flex flex-col items-center gap-1">
+							<span className="text-base leading-none">{CATEGORY_META[cat].icon}</span>
+							{isActive ? (
 								<Input
 									type="number"
-									value={cat === "music" ? musicScore : cat === "performance" ? performanceScore : vibesScore}
+									value={getCurrentScore(cat)}
 									onChange={(e) => {
 										void handleRatingChange(cat, e.target.value);
 									}}
@@ -427,22 +481,213 @@ const ContestantRatingPage: React.FC = () => {
 									className="h-11 text-center text-base font-extrabold bg-[#12121a] border-white/[0.08] focus-visible:border-[#f5b800]/40 focus-visible:ring-[#f5b800]/20 rounded-xl"
 									aria-label={`${CATEGORY_META[cat].label} score input`}
 								/>
-								<span className="text-[9px] font-bold text-[#8a8a9a] uppercase tracking-wider">
-									{CATEGORY_META[cat].label}
-								</span>
-							</div>
-						))}
-						<div className="flex flex-col items-center gap-1">
-							<span className="text-base leading-none">⭐</span>
-							<div className="h-11 flex items-center justify-center w-full rounded-xl bg-[#f5b800]/10 border border-[#f5b800]/20">
-								<span className="text-lg font-extrabold text-[#f5b800] tabular-nums">
-									{currentUserTotal}
-								</span>
-							</div>
-							<span className="text-[9px] font-bold text-[#8a8a9a] uppercase tracking-wider">Total</span>
+							) : (
+								<div className="h-11 flex items-center justify-center w-full rounded-xl bg-[#12121a] border border-white/[0.08]">
+									<span className="text-base font-extrabold text-[#f0f0f5] tabular-nums">
+										{getCurrentScore(cat) || "—"}
+									</span>
+								</div>
+							)}
+							<span className="text-[9px] font-bold text-[#8a8a9a] uppercase tracking-wider">
+								{CATEGORY_META[cat].label}
+							</span>
 						</div>
+					))}
+					<div className="flex flex-col items-center gap-1">
+						<span className="text-base leading-none">⭐</span>
+						<div className="h-11 flex items-center justify-center w-full rounded-xl bg-[#f5b800]/10 border border-[#f5b800]/20">
+							<span className="text-lg font-extrabold text-[#f5b800] tabular-nums">
+								{currentUserTotal}
+							</span>
+						</div>
+						<span className="text-[9px] font-bold text-[#8a8a9a] uppercase tracking-wider">Total</span>
 					</div>
 				</div>
+			</div>
+		</div>
+	);
+}
+
+function EdgePanel({ label }: { label: string }) {
+	return (
+		<div className="h-full flex items-center justify-center px-4 text-center">
+			<p className="text-xs font-bold uppercase tracking-widest text-[#8a8a9a]/50">
+				{label}
+			</p>
+		</div>
+	);
+}
+
+const ContestantRatingPage: React.FC = () => {
+	const { roomName, contestantId } = useParams<{
+		roomName: string;
+		contestantId: string;
+	}>();
+	const navigate = useNavigate();
+	const year = useAppYear();
+	const { trigger } = useHaptics();
+	const isSwipeEnabled = useCoarsePointer();
+	const containerRef = useRef<HTMLDivElement | null>(null);
+	const scrollTimeoutRef = useRef<number | null>(null);
+	const isProgrammaticScrollRef = useRef(false);
+
+	const previousContestantId = contestantId
+		? getPreviousContestantId(contestantId, year)
+		: null;
+	const nextContestantId = contestantId
+		? getNextContestantId(contestantId, year)
+		: null;
+
+	useLayoutEffect(() => {
+		if (!containerRef.current) return;
+		isProgrammaticScrollRef.current = true;
+		containerRef.current.scrollLeft = containerRef.current.offsetWidth;
+		const timeout = window.setTimeout(() => {
+			isProgrammaticScrollRef.current = false;
+		}, 80);
+		return () => window.clearTimeout(timeout);
+	}, [contestantId]);
+
+	useEffect(() => {
+		return () => {
+			if (scrollTimeoutRef.current !== null) {
+				window.clearTimeout(scrollTimeoutRef.current);
+			}
+		};
+	}, []);
+
+	const navigateToContestant = useCallback(
+		(newContestantId: string | null) => {
+			if (!newContestantId || !roomName) return;
+			void navigate(
+				buildRoomPath(year, roomName, `/contestant/${newContestantId}`),
+				{ replace: true },
+			);
+		},
+		[navigate, roomName, year],
+	);
+
+	const handleScroll = useCallback(() => {
+		if (!containerRef.current || isProgrammaticScrollRef.current) return;
+
+		if (scrollTimeoutRef.current !== null) {
+			window.clearTimeout(scrollTimeoutRef.current);
+		}
+
+		scrollTimeoutRef.current = window.setTimeout(() => {
+			const container = containerRef.current;
+			if (!container || isProgrammaticScrollRef.current) return;
+
+			const width = container.offsetWidth;
+			if (width === 0) return;
+			const index = Math.round(container.scrollLeft / width);
+			const expectedScrollLeft = index * width;
+
+			if (Math.abs(container.scrollLeft - expectedScrollLeft) > 6) return;
+
+			if (index === 0) {
+				navigateToContestant(previousContestantId);
+			} else if (index === 2) {
+				navigateToContestant(nextContestantId);
+			}
+		}, 180);
+	}, [navigateToContestant, nextContestantId, previousContestantId]);
+
+	const handlePanelNavigate = useCallback(
+		(direction: "previous" | "next") => {
+			const container = containerRef.current;
+			if (!container) return;
+
+			trigger("light");
+			const width = container.offsetWidth;
+			const target =
+				direction === "previous"
+					? Math.max(0, container.scrollLeft - width)
+					: Math.min(width * 2, container.scrollLeft + width);
+
+			container.scrollTo({ left: target, behavior: "smooth" });
+		},
+		[trigger],
+	);
+
+	if (!contestantId || !roomName) {
+		return (
+			<div className="py-5 text-center">
+				<p className="text-red-400 font-medium mb-4">Contestant not found</p>
+				<Link to="/" className="text-[#f5b800] font-semibold hover:underline">
+					Back home
+				</Link>
+			</div>
+		);
+	}
+
+	if (!isSwipeEnabled) {
+		return (
+			<div className="py-5">
+				<ContestantPanel
+					contestantId={contestantId}
+					roomName={roomName}
+					year={year}
+					isActive
+					onNavigate={(direction) => {
+						const targetContestantId =
+							direction === "previous"
+								? previousContestantId
+								: nextContestantId;
+						if (!targetContestantId) return;
+						trigger("light");
+						void navigate(
+							buildRoomPath(year, roomName, `/contestant/${targetContestantId}`),
+						);
+					}}
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<div
+			ref={containerRef}
+			onScroll={handleScroll}
+			className="-mx-4 h-full flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain"
+			style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+		>
+			<div className="h-full w-full shrink-0 snap-start overflow-y-auto px-4">
+				{previousContestantId ? (
+					<ContestantPanel
+						contestantId={previousContestantId}
+						roomName={roomName}
+						year={year}
+						isActive={false}
+						onNavigate={handlePanelNavigate}
+					/>
+				) : (
+					<EdgePanel label="First entry" />
+				)}
+			</div>
+
+			<div className="h-full w-full shrink-0 snap-start overflow-y-auto px-4">
+				<ContestantPanel
+					contestantId={contestantId}
+					roomName={roomName}
+					year={year}
+					isActive
+					onNavigate={handlePanelNavigate}
+				/>
+			</div>
+
+			<div className="h-full w-full shrink-0 snap-start overflow-y-auto px-4">
+				{nextContestantId ? (
+					<ContestantPanel
+						contestantId={nextContestantId}
+						roomName={roomName}
+						year={year}
+						isActive={false}
+						onNavigate={handlePanelNavigate}
+					/>
+				) : (
+					<EdgePanel label="Last entry" />
+				)}
 			</div>
 		</div>
 	);
