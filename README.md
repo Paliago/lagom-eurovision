@@ -1,40 +1,36 @@
-# Welcome to your Convex + React (Vite) app
+# Lagom Eurovision
 
-This is a [Convex](https://convex.dev/) project created with [`npm create convex`](https://www.npmjs.com/package/create-convex).
+A real-time Eurovision Song Contest scoring app for watching with friends. Create a room, invite people with a room name, and rate each contestant across three categories: music, performance, and vibes.
 
-After the initial setup (<2 minutes) you'll have a working full-stack app using:
-
-- Convex as your backend (database, server logic)
-- [React](https://react.dev/) as your frontend (web page interactivity)
-- [Vite](https://vitest.dev/) for optimized web hosting
-- [Tailwind](https://tailwindcss.com/) for building great looking accessible UI
+Built with Convex, React, Vite, and Tailwind.
 
 ## Get started
 
-If you just cloned this codebase and didn't use `npm create convex`, run:
-
-```
+```sh
 npm install
 npm run dev
 ```
 
-If you're reading this README on GitHub and want to use this template, run:
+## Year Support
 
-```
-npm create convex@latest -- -t react-vite
-```
+The app supports multiple Eurovision years. It defaults to the latest year (currently **2026**).
 
-## Learn more
+### Accessing Previous Years
 
-To learn more about developing your project with Convex, check out:
+You can join rooms for earlier years by navigating to a year-prefixed sub-path. No UI toggle is exposed; simply change the URL:
 
-- The [Tour of Convex](https://docs.convex.dev/get-started) for a thorough introduction to Convex principles.
-- The rest of [Convex docs](https://docs.convex.dev/) to learn about all Convex features.
-- [Stack](https://stack.convex.dev/) for in-depth articles on advanced topics.
+| Page | Default (2026) | 2025 |
+|---|---|---|
+| Contestant List | `/room/:roomName/contestants` | `/2025/room/:roomName/contestants` |
+| Rate Contestant | `/room/:roomName/contestant/:id` | `/2025/room/:roomName/contestant/:id` |
+| Overview | `/room/:roomName/overview` | `/2025/room/:roomName/overview` |
 
-## Join the community
+Once on a year-prefixed route, all navigation (prev/next contestant, overview, back buttons) preserves the year automatically.
 
-Join thousands of developers building full-stack apps with Convex:
+### Adding a New Year
 
-- Join the [Convex Discord community](https://convex.dev/community) to get help in real-time.
-- Follow [Convex on GitHub](https://github.com/get-convex/), star and contribute to the open-source implementation of Convex.
+To bump the default year (e.g. to 2027), update `src/lib/contestants.ts`:
+
+1. Add a new `contestants2027` array with the contestant data.
+2. Change `DEFAULT_YEAR = 2027`.
+3. Add `2027` to `VALID_YEARS`.
