@@ -516,20 +516,46 @@ export function getContestantsByYear(year: number): Contestant[] {
 	return CONTESTANTS_BY_YEAR[year] || contestants2026;
 }
 
+// Build O(1) lookup Maps per year for fast contestant access
+const CONTESTANT_MAPS_BY_YEAR: Record<number, Map<string, Contestant>> = {};
+const CONTESTANT_INDEX_MAPS_BY_YEAR: Record<number, Map<string, number>> = {};
+
+for (const year of VALID_YEARS) {
+	const list = CONTESTANTS_BY_YEAR[year];
+	if (!list) continue;
+	const contestantMap = new Map<string, Contestant>();
+	const indexMap = new Map<string, number>();
+	for (let i = 0; i < list.length; i++) {
+		const c = list[i];
+		contestantMap.set(c.id, c);
+		indexMap.set(c.id, i);
+	}
+	CONTESTANT_MAPS_BY_YEAR[year] = contestantMap;
+	CONTESTANT_INDEX_MAPS_BY_YEAR[year] = indexMap;
+}
+
 export const getContestantById = (id: string, year: number = DEFAULT_YEAR) =>
-	getContestantsByYear(year).find((c) => c.id === id);
+	CONTESTANT_MAPS_BY_YEAR[year]?.get(id) ??
+	CONTESTANT_MAPS_BY_YEAR[DEFAULT_YEAR]?.get(id);
+
+export const getContestantIndexById = (
+	id: string,
+	year: number = DEFAULT_YEAR,
+): number | undefined =>
+	CONTESTANT_INDEX_MAPS_BY_YEAR[year]?.get(id) ??
+	CONTESTANT_INDEX_MAPS_BY_YEAR[DEFAULT_YEAR]?.get(id);
 
 export const getNextContestantId = (
 	currentId: string,
 	year: number = DEFAULT_YEAR,
 ): string | null => {
 	const arr = getContestantsByYear(year);
-	const currentIndex = arr.findIndex((c) => c.id === currentId);
-	if (currentIndex === -1) {
-		return null; // Should not happen if currentId is valid
+	const currentIndex = getContestantIndexById(currentId, year);
+	if (currentIndex === undefined) {
+		return null;
 	}
 	if (currentIndex === arr.length - 1) {
-		return arr[0].id; // Wrap to the first contestant
+		return arr[0].id;
 	}
 	return arr[currentIndex + 1].id;
 };
@@ -539,12 +565,12 @@ export const getPreviousContestantId = (
 	year: number = DEFAULT_YEAR,
 ): string | null => {
 	const arr = getContestantsByYear(year);
-	const currentIndex = arr.findIndex((c) => c.id === currentId);
-	if (currentIndex === -1) {
-		return null; // Should not happen if currentId is valid
+	const currentIndex = getContestantIndexById(currentId, year);
+	if (currentIndex === undefined) {
+		return null;
 	}
 	if (currentIndex === 0) {
-		return arr[arr.length - 1].id; // Wrap to the last contestant
+		return arr[arr.length - 1].id;
 	}
 	return arr[currentIndex - 1].id;
 };
