@@ -1,6 +1,27 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+const ratingDocValidator = v.object({
+	_id: v.id("ratings"),
+	_creationTime: v.number(),
+	roomId: v.id("rooms"),
+	contestantId: v.string(),
+	userId: v.string(),
+	nickname: v.string(),
+	musicScore: v.optional(v.number()),
+	performanceScore: v.optional(v.number()),
+	vibesScore: v.optional(v.number()),
+});
+
+const overviewResultValidator = v.object({
+	contestantId: v.string(),
+	avgMusic: v.union(v.number(), v.null()),
+	avgPerformance: v.union(v.number(), v.null()),
+	avgVibes: v.union(v.number(), v.null()),
+	totalAvg: v.union(v.number(), v.null()),
+	numRaters: v.number(),
+});
+
 /**
  * Mutation to submit or update a user's rating for a specific category of a contestant in a room.
  * It performs an "upsert": updates if a rating by the user for the contestant/category exists, otherwise inserts.
@@ -18,6 +39,7 @@ export const submitRating = mutation({
 		),
 		score: v.number(),
 	},
+	returns: v.null(),
 	handler: async (ctx, args) => {
 		const existingRating = await ctx.db
 			.query("ratings")
@@ -79,6 +101,7 @@ export const getRatingsForRoomAndContestant = query({
 		roomId: v.id("rooms"),
 		contestantId: v.string(),
 	},
+	returns: v.array(ratingDocValidator),
 	handler: async (ctx, args) => {
 		return await ctx.db
 			.query("ratings")
@@ -95,6 +118,7 @@ export const getUserRatingForContestant = query({
 		contestantId: v.string(),
 		userId: v.string(),
 	},
+	returns: v.union(v.null(), ratingDocValidator),
 	handler: async (ctx, args) => {
 		return await ctx.db
 			.query("ratings")
@@ -114,6 +138,7 @@ export const getUserRatingForContestant = query({
  */
 export const getOverviewRatingsForRoom = query({
 	args: { roomId: v.id("rooms") },
+	returns: v.array(overviewResultValidator),
 	handler: async (ctx, args) => {
 		const allRatingsInRoom = await ctx.db
 			.query("ratings")
@@ -124,14 +149,14 @@ export const getOverviewRatingsForRoom = query({
 			return [];
 		}
 
-		// Aggregate ratings by contestantId
+		// Aggregate ratings by contestantId in a single pass
 		const ratingsByContestant: Record<
 			string,
 			{
 				musicScores: number[];
 				performanceScores: number[];
 				vibesScores: number[];
-				count: number;
+				uniqueUserIds: Set<string>;
 			}
 		> = {};
 
@@ -141,37 +166,25 @@ export const getOverviewRatingsForRoom = query({
 					musicScores: [],
 					performanceScores: [],
 					vibesScores: [],
-					count: 0,
+					uniqueUserIds: new Set(),
 				};
 			}
 
-			if (rating.musicScore !== undefined)
-				ratingsByContestant[rating.contestantId].musicScores.push(
-					rating.musicScore,
-				);
-			if (rating.performanceScore !== undefined)
-				ratingsByContestant[rating.contestantId].performanceScores.push(
-					rating.performanceScore,
-				);
-			if (rating.vibesScore !== undefined)
-				ratingsByContestant[rating.contestantId].vibesScores.push(
-					rating.vibesScore,
-				);
-		}
+			const contestantData = ratingsByContestant[rating.contestantId];
+			contestantData.uniqueUserIds.add(rating.userId);
 
-		// For a more accurate count of unique raters per contestant:
-		const uniqueRatersByContestant: Record<string, Set<string>> = {};
-		for (const r of allRatingsInRoom) {
-			if (!uniqueRatersByContestant[r.contestantId]) {
-				uniqueRatersByContestant[r.contestantId] = new Set();
-			}
-			uniqueRatersByContestant[r.contestantId].add(r.userId);
+			if (rating.musicScore !== undefined)
+				contestantData.musicScores.push(rating.musicScore);
+			if (rating.performanceScore !== undefined)
+				contestantData.performanceScores.push(rating.performanceScore);
+			if (rating.vibesScore !== undefined)
+				contestantData.vibesScores.push(rating.vibesScore);
 		}
 
 		// Calculate averages
 		const overviewResults = Object.entries(ratingsByContestant).map(
 			([contestantId, data]) => {
-				const numRaters = uniqueRatersByContestant[contestantId]?.size || 0;
+				const numRaters = data.uniqueUserIds.size;
 
 				const avgMusic =
 					numRaters > 0 && data.musicScores.length > 0
@@ -201,18 +214,22 @@ export const getOverviewRatingsForRoom = query({
 				return {
 					contestantId,
 					avgMusic:
-						avgMusic !== null ? Number.parseFloat(avgMusic.toFixed(1)) : null,
+						avgMusic !== null
+							? Number.parseFloat(avgMusic.toFixed(1))
+							: null,
 					avgPerformance:
 						avgPerformance !== null
 							? Number.parseFloat(avgPerformance.toFixed(1))
 							: null,
 					avgVibes:
-						avgVibes !== null ? Number.parseFloat(avgVibes.toFixed(1)) : null,
+						avgVibes !== null
+							? Number.parseFloat(avgVibes.toFixed(1))
+							: null,
 					totalAvg:
 						overallTotalAvg !== null
 							? Number.parseFloat(overallTotalAvg.toFixed(1))
 							: null,
-					numRaters: numRaters,
+					numRaters,
 				};
 			},
 		);
@@ -223,7 +240,6 @@ export const getOverviewRatingsForRoom = query({
 
 /**
  * Query to fetch all ratings for a specific contestant across all rooms and aggregate them.
- * Calculates average scores for music, performance, vibes, and an overall total average globally.
  */
 export const getGlobalRatingsForContestant = query({
 	args: { contestantId: v.string() },
@@ -307,7 +323,9 @@ export const getGlobalRatingsForContestant = query({
 					? Number.parseFloat(avgPerformance.toFixed(1))
 					: null,
 			avgVibes:
-				avgVibes !== null ? Number.parseFloat(avgVibes.toFixed(1)) : null,
+				avgVibes !== null
+					? Number.parseFloat(avgVibes.toFixed(1))
+					: null,
 			totalAvg:
 				overallTotalAvg !== null
 					? Number.parseFloat(overallTotalAvg.toFixed(1))
@@ -319,7 +337,6 @@ export const getGlobalRatingsForContestant = query({
 
 /**
  * Query to fetch all ratings for all contestants across all rooms and aggregate them.
- * Calculates average scores for music, performance, vibes, and an overall total average globally for each contestant.
  */
 export const getGlobalOverviewRatings = query({
 	args: {},
@@ -410,13 +427,17 @@ export const getGlobalOverviewRatings = query({
 				return {
 					contestantId,
 					avgMusic:
-						avgMusic !== null ? Number.parseFloat(avgMusic.toFixed(1)) : null,
+						avgMusic !== null
+							? Number.parseFloat(avgMusic.toFixed(1))
+							: null,
 					avgPerformance:
 						avgPerformance !== null
 							? Number.parseFloat(avgPerformance.toFixed(1))
 							: null,
 					avgVibes:
-						avgVibes !== null ? Number.parseFloat(avgVibes.toFixed(1)) : null,
+						avgVibes !== null
+							? Number.parseFloat(avgVibes.toFixed(1))
+							: null,
 					totalAvg:
 						overallTotalAvg !== null
 							? Number.parseFloat(overallTotalAvg.toFixed(1))

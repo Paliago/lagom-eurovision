@@ -7,6 +7,11 @@ export const joinOrCreateRoom = mutation({
 		nickname: v.string(),
 		userId: v.string(),
 	},
+	returns: v.object({
+		roomId: v.id("rooms"),
+		isNewRoom: v.boolean(),
+		userId: v.string(),
+	}),
 	handler: async (ctx, args) => {
 		const existingRoom = await ctx.db
 			.query("rooms")
@@ -51,6 +56,9 @@ export const joinOrCreateRoom = mutation({
 
 export const getRoomUsers = query({
 	args: { roomId: v.id("rooms") },
+	returns: v.array(
+		v.object({ nickname: v.string(), userId: v.string() }),
+	),
 	handler: async (ctx, args) => {
 		const room = await ctx.db.get(args.roomId);
 		if (!room) {
@@ -65,6 +73,10 @@ export const findUserInRoomByNickname = query({
 		roomName: v.string(),
 		nickname: v.string(),
 	},
+	returns: v.union(
+		v.null(),
+		v.object({ userId: v.string(), roomId: v.id("rooms") }),
+	),
 	handler: async (ctx, args) => {
 		const room = await ctx.db
 			.query("rooms")
