@@ -1,5 +1,4 @@
-import type React from "react";
-import {
+import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -158,7 +157,7 @@ interface ContestantPanelProps {
   onNavigate: (direction: "previous" | "next") => void;
 }
 
-function ContestantPanel({
+const ContestantPanel = React.memo(function ContestantPanel({
   contestantId,
   roomName,
   year,
@@ -797,7 +796,7 @@ function ContestantPanel({
       </div>
     </div>
   );
-}
+});
 
 const ContestantRatingPage: React.FC = () => {
   const { roomName, contestantId } = useParams<{
@@ -831,6 +830,7 @@ const ContestantRatingPage: React.FC = () => {
   } | null>(null);
   const pendingContestantIndexRef = useRef<number | null>(null);
   const snapCompletionTimeoutRef = useRef<number | null>(null);
+  const translateXRef = useRef(0);
 
   const activeContestant = contestants[activeContestantIndex] ?? null;
   const activeContestantId = activeContestant?.id ?? contestantId ?? null;
@@ -853,22 +853,19 @@ const ContestantRatingPage: React.FC = () => {
     const container = containerRef.current;
     if (!container) return;
 
-    const updateWidth = () => {
-      const width = container.offsetWidth;
-      setContainerWidth(width);
-      setTranslateX(-width * activePanelIndex);
-    };
-
-    updateWidth();
-    const resizeObserver = new ResizeObserver(updateWidth);
+    const resizeObserver = new ResizeObserver(() => {
+      setContainerWidth(container.offsetWidth);
+    });
     resizeObserver.observe(container);
 
     return () => resizeObserver.disconnect();
-  }, [activeContestantIndex, activePanelIndex]);
+  }, []);
 
   useLayoutEffect(() => {
     setIsAnimating(false);
-    setTranslateX(-containerWidth * activePanelIndex);
+    const nextTranslateX = -containerWidth * activePanelIndex;
+    setTranslateX(nextTranslateX);
+    translateXRef.current = nextTranslateX;
     pendingContestantIndexRef.current = null;
     if (snapCompletionTimeoutRef.current !== null) {
       window.clearTimeout(snapCompletionTimeoutRef.current);
@@ -938,6 +935,7 @@ const ContestantRatingPage: React.FC = () => {
 
       setIsAnimating(true);
       setTranslateX(targetTranslateX);
+      translateXRef.current = targetTranslateX;
       snapCompletionTimeoutRef.current = window.setTimeout(
         completePendingSnap,
         320,
@@ -966,6 +964,7 @@ const ContestantRatingPage: React.FC = () => {
       }
       setIsAnimating(false);
       setTranslateX(currentTranslateX);
+      translateXRef.current = currentTranslateX;
       pendingContestantIndexRef.current = null;
 
       dragStateRef.current = {
@@ -1017,7 +1016,10 @@ const ContestantRatingPage: React.FC = () => {
         minTranslateX,
         Math.min(maxTranslateX, dragState.startTranslateX + deltaX),
       );
-      setTranslateX(nextTranslateX);
+      translateXRef.current = nextTranslateX;
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translate3d(${nextTranslateX}px, 0, 0)`;
+      }
     },
     [containerWidth, contestants.length, getActiveTouch],
   );
@@ -1044,9 +1046,9 @@ const ContestantRatingPage: React.FC = () => {
       trigger("light");
       snapToPanel(startPanelIndex + 1);
     } else {
-      snapToPanel(Math.round(-translateX / containerWidth));
+      snapToPanel(Math.round(-translateXRef.current / containerWidth));
     }
-  }, [activePanelIndex, containerWidth, snapToPanel, translateX, trigger]);
+  }, [activePanelIndex, containerWidth, snapToPanel, trigger]);
 
   const cancelTouchGesture = useCallback(() => {
     dragStateRef.current = null;

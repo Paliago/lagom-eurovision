@@ -86,10 +86,7 @@ function createColumns(year: number): ColumnDef<OverviewData>[] {
         <SortableHeader column={column}>#</SortableHeader>
       ),
       accessorFn: (row: OverviewData) => getOrderValue(row.contestantId, year),
-      cell: (info) => {
-        const orderValue = info.getValue<number>();
-        return orderValue === Number.MAX_SAFE_INTEGER ? "—" : orderValue;
-      },
+      cell: (info) => info.row.index + 1,
       sortingFn: "alphanumeric",
     },
     {
