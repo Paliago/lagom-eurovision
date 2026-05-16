@@ -21,6 +21,7 @@ import {
   useReactTable,
   type Column,
   type Row,
+  type Table,
 } from "@tanstack/react-table";
 import { Globe, Users, ChevronUp, ChevronDown } from "lucide-react";
 
@@ -163,13 +164,81 @@ function createColumns(year: number): ColumnDef<OverviewData>[] {
   ];
 }
 
-const OverviewPage: React.FC = () => {
+interface TableViewProps {
+  table: Table<OverviewData>;
+  emptyMessage: string;
+}
+
+const TableView: React.FC<TableViewProps> = ({ table, emptyMessage }) => {
   const { roomName } = useParams<{ roomName: string }>();
   const navigate = useNavigate();
   const year = useAppYear();
+  const { trigger } = useHaptics();
+
+  const rows = table.getRowModel().rows;
+  if (rows.length === 0) {
+    return (
+      <p className="text-center text-[#8a8a9a] text-sm py-8 font-medium">
+        {emptyMessage}
+      </p>
+    );
+  }
+
+  const handleRowClick = (contestantId: string) => {
+    trigger("light");
+    void navigate(buildRoomPath(year, roomName || "", `/contestant/${contestantId}`));
+  };
+
+  return (
+    <div className="overflow-x-auto -mx-4 px-4">
+      <table className="w-full min-w-[340px]">
+        <thead>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id} className="border-b border-white/[0.08]">
+              {headerGroup.headers.map((header) => (
+                <th key={header.id} className="px-0.5">
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr
+              key={row.id}
+              className="transition-colors hover:bg-white/[0.03] active:bg-white/[0.05] cursor-pointer"
+              onClick={() => handleRowClick(row.original.contestantId)}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <td
+                  key={cell.id}
+                  className={getCellClass(cell.column.id, cell.getValue())}
+                >
+                  {flexRender(
+                    cell.column.columnDef.cell,
+                    cell.getContext(),
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const OverviewPage: React.FC = () => {
+  const { roomName } = useParams<{ roomName: string }>();
+  const year = useAppYear();
   const contestants = getContestantsByYear(year);
   const { roomId: storedRoomId } = useEurovisionUser();
-  const { trigger } = useHaptics();
 
   const roomOverviewQueryData = useQuery(
     api.ratings.getOverviewRatingsForRoom,
@@ -181,14 +250,19 @@ const OverviewPage: React.FC = () => {
     {},
   );
 
-  const yearContestantIds = new Set(contestants.map((c) => c.id));
-
-  const roomDataForYear = (roomOverviewQueryData || []).filter((row) =>
-    yearContestantIds.has(row.contestantId),
+  const yearContestantIds = React.useMemo(
+    () => new Set(contestants.map((c) => c.id)),
+    [contestants],
   );
 
-  const globalDataForYear = (globalOverviewQueryData || []).filter((row) =>
-    yearContestantIds.has(row.contestantId),
+  const roomDataForYear = React.useMemo(
+    () => (roomOverviewQueryData || []).filter((row) => yearContestantIds.has(row.contestantId)),
+    [roomOverviewQueryData, yearContestantIds],
+  );
+
+  const globalDataForYear = React.useMemo(
+    () => (globalOverviewQueryData || []).filter((row) => yearContestantIds.has(row.contestantId)),
+    [globalOverviewQueryData, yearContestantIds],
   );
 
   const [roomSorting, setRoomSorting] = React.useState<SortingState>([
@@ -218,72 +292,6 @@ const OverviewPage: React.FC = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
-
-  const TableView = ({
-    table,
-    emptyMessage,
-  }: {
-    table: ReturnType<typeof useReactTable<OverviewData>>;
-    emptyMessage: string;
-  }) => {
-    const rows = table.getRowModel().rows;
-    if (rows.length === 0) {
-      return (
-        <p className="text-center text-[#8a8a9a] text-sm py-8 font-medium">
-          {emptyMessage}
-        </p>
-      );
-    }
-
-    const handleRowClick = (contestantId: string) => {
-      trigger("light");
-      void navigate(buildRoomPath(year, roomName || "", `/contestant/${contestantId}`));
-    };
-
-    return (
-      <div className="overflow-x-auto -mx-4 px-4">
-        <table className="w-full min-w-[340px]">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-white/[0.08]">
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-0.5">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.id}
-                className="transition-colors hover:bg-white/[0.03] active:bg-white/[0.05] cursor-pointer"
-                onClick={() => handleRowClick(row.original.contestantId)}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className={getCellClass(cell.column.id, cell.getValue())}
-                  >
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext(),
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
 
   if (!storedRoomId && globalOverviewQueryData === undefined) {
     return (

@@ -651,6 +651,7 @@ const ContestantPanel = React.memo(function ContestantPanel({
             src={contestant.flagUrl}
             alt={`Flag of ${contestant.country}`}
             className="w-32 h-20 object-cover rounded-xl shadow-lg border border-white/[0.08]"
+            loading="lazy"
           />
 
           <button
