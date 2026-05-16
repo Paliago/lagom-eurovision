@@ -195,7 +195,7 @@ const OverviewPage: React.FC = () => {
   );
 
   const [roomSorting, setRoomSorting] = React.useState<SortingState>([
-    { id: "order", desc: false },
+    { id: "totalAvg", desc: true },
   ]);
 
   const [globalSorting, setGlobalSorting] = React.useState<SortingState>([
