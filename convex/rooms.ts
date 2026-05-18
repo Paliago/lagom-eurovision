@@ -13,9 +13,12 @@ export const joinOrCreateRoom = mutation({
 		userId: v.string(),
 	}),
 	handler: async (ctx, args) => {
+		const roomName = args.roomName.trim();
+		const normalizedName = roomName.toLowerCase();
+
 		const existingRoom = await ctx.db
 			.query("rooms")
-			.withIndex("by_name", (q) => q.eq("name", args.roomName))
+			.withIndex("by_normalizedName", (q) => q.eq("normalizedName", normalizedName))
 			.unique();
 
 		if (existingRoom) {
@@ -47,7 +50,8 @@ export const joinOrCreateRoom = mutation({
 		}
 
 		const newRoomId = await ctx.db.insert("rooms", {
-			name: args.roomName,
+			name: roomName,
+			normalizedName,
 			users: [{ nickname: args.nickname, userId: args.userId }],
 		});
 		return { roomId: newRoomId, isNewRoom: true, userId: args.userId };
@@ -78,9 +82,12 @@ export const findUserInRoomByNickname = query({
 		v.object({ userId: v.string(), roomId: v.id("rooms") }),
 	),
 	handler: async (ctx, args) => {
+		const roomName = args.roomName.trim();
+		const normalizedName = roomName.toLowerCase();
+
 		const room = await ctx.db
 			.query("rooms")
-			.withIndex("by_name", (q) => q.eq("name", args.roomName))
+			.withIndex("by_normalizedName", (q) => q.eq("normalizedName", normalizedName))
 			.unique();
 
 		if (room) {

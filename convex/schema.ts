@@ -4,8 +4,11 @@ import { v } from "convex/values";
 export default defineSchema({
 	rooms: defineTable({
 		name: v.string(),
+		normalizedName: v.optional(v.string()),
 		users: v.array(v.object({ nickname: v.string(), userId: v.string() })),
-	}).index("by_name", ["name"]),
+	})
+		.index("by_name", ["name"])
+		.index("by_normalizedName", ["normalizedName"]),
 
 	ratings: defineTable({
 		roomId: v.id("rooms"),

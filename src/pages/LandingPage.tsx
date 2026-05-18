@@ -23,7 +23,8 @@ const LandingPage: React.FC = () => {
   const { trigger } = useHaptics();
 
   const handleJoinOrCreateRoom = async () => {
-    if (!roomName.trim() || !nickname.trim()) {
+    const trimmedRoomName = roomName.trim();
+    if (!trimmedRoomName || !nickname.trim()) {
       trigger("error");
       alert("Please enter both Room Name and Nickname.");
       return;
@@ -37,7 +38,7 @@ const LandingPage: React.FC = () => {
 
       const existingUserData = await client.query(
         api.rooms.findUserInRoomByNickname,
-        { roomName, nickname },
+        { roomName: trimmedRoomName, nickname },
       );
 
       if (existingUserData) {
@@ -47,7 +48,7 @@ const LandingPage: React.FC = () => {
       }
 
       const result = await joinOrCreateRoomMutation({
-        roomName,
+        roomName: trimmedRoomName,
         nickname,
         userId: resolvedUserId,
       });
@@ -57,7 +58,7 @@ const LandingPage: React.FC = () => {
       if (result.roomId) {
         localStorage.setItem("eurovisionRoomId", result.roomId.toString());
         trigger("success");
-        void navigate(`/room/${roomName}/contestants`);
+        void navigate(`/room/${trimmedRoomName}/contestants`);
       }
     } catch (error) {
       trigger("error");
